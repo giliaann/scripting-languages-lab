@@ -11,3 +11,6 @@ wheels/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+
+# ruff 
+.ruff_cache

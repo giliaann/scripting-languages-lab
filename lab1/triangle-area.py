@@ -1,42 +1,47 @@
 import sys
 
-def countArea(base, height):
+
+def count_area(base, height):
     return base * height / 2
 
-def getUserInput():
+
+def get_user_input():
     print("Enter triangle data.")
     base = input("Base: ")
     height = input("Height: ")
     return base, height
 
-def parsePositiveInteger(n):
-    n = int(n) 
-    if(n <= 0): 
+
+def parse_positive_integer(n):
+    n = int(n)
+    if n <= 0:
         raise ValueError("Invalid argument - value must be positive")
     return n
 
+
 def main():
 
-    base, height = getUserInput()
-    
+    base, height = get_user_input()
+
     valid_data = True
 
     try:
-        base = parsePositiveInteger(base)
+        base = parse_positive_integer(base)
     except ValueError as e:
-        print(f"Invalid base - {e}", file = sys.stderr)
+        print(f"Invalid base - {e}", file=sys.stderr)
         valid_data = False
 
     try:
-        height = parsePositiveInteger(height)
+        height = parse_positive_integer(height)
     except ValueError as e:
-        print(f"Invalid height - {e}", file = sys.stderr)
+        print(f"Invalid height - {e}", file=sys.stderr)
         valid_data = False
-    
+
     if not valid_data:
         return
 
-    print(f"Area of given triangle: {countArea(base,height)}")
-    
+    print(f"Area of given triangle: {count_area(base, height)}")
+
+
 if __name__ == "__main__":
     main()
