@@ -135,7 +135,7 @@ def process_content(c):
 
 def main():
 
-    sys.stdin.reconfigure(encoding="utf-8")
+    sys.stdin.reconfigure(encoding="utf-8-sig")
     sys.stdout.reconfigure(encoding="utf-8")
 
     preamble_buffer, has_preamble, eof_occured, c = process_preamble()

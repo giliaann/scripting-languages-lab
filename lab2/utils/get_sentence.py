@@ -24,6 +24,8 @@ def get_sentence():
 
     sentence = ""
 
+    #any char starts a sentence, '.' is a snetence 
+
     while c and c != "?" and c != "!" and c != ".":
         # checking eof chars
         if c == "-":
