@@ -14,15 +14,26 @@ def get_sentence():
 
     # end of sentence chars: '?', '!', '.', '\n' ...whistepsaces.. '\n'
 
-    while c and c.isspace():
-        c = sys.stdin.read(1)
-
-    eof_occured = False
-    previous_new_line = False
     divisor_series = 0
     max_divisors = 5
+    eof_occured = False
 
     sentence = ""
+
+    #sentence starts with char
+    while c and not c.isalpha():
+        if c == "-":
+            divisor_series += 1
+            # eof sequence found
+            if divisor_series >= max_divisors:
+                eof_occured = True
+                return sentence, eof_occured
+        else:
+            divisor_series = 0
+        c = sys.stdin.read(1)
+
+    divisor_series = 0
+    previous_new_line = False
 
     #any char starts a sentence, '.' is a snetence 
 
