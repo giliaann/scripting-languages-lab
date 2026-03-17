@@ -2,8 +2,7 @@ import sys
 
 # command to run script:
 # $OutputEncoding = [System.Text.Encoding]::UTF8
-# cat -Encoding UTF8 calineczka.txt | python extract_content.py
-
+# cat -Encoding UTF8 ../data/dickens-opowiesc-wigilijna.txt | python extract_content.py
 
 def process_preamble():
 
