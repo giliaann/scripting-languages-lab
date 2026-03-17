@@ -12,15 +12,13 @@ def get_sentence():
 
     c = sys.stdin.read(1)
 
-    # end of sentence chars: '?', '!', '.', '\n' ...whistepsaces.. '\n'
-
     divisor_series = 0
     max_divisors = 5
     eof_occured = False
 
     sentence = ""
 
-    #sentence starts with char
+    #sentence starts with a letter
     while c and not c.isalpha():
         if c == "-":
             divisor_series += 1
@@ -34,8 +32,6 @@ def get_sentence():
 
     divisor_series = 0
     previous_new_line = False
-
-    #any char starts a sentence, '.' is a snetence 
 
     while c and c != "?" and c != "!" and c != ".":
         # checking eof chars
