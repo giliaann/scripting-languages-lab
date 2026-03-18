@@ -82,7 +82,7 @@ def search_longest_sequence():
             break
         sequence, eof = get_sentence()
     
-    return longest_sequence + f' -> {len(longest_sequence)}'
+    return longest_sequence
 
 
 if __name__ == '__main__':
