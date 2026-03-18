@@ -121,4 +121,4 @@ def longest_non_repeating_initials_sentence():
 
 
 if __name__ == '__main__':
-    print(longest_non_repeating_initials_sentence)
+    print(longest_non_repeating_initials_sentence())
