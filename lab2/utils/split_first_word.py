@@ -6,11 +6,11 @@ def split_first_word(sentence):
         c = sentence[i]
         if c.isalpha():
             word += c
-        #ommit first whitespaces
+        # ommit first whitespaces
         elif len(word) != 0:
             break
         i += 1
-    
+
     remainder = sentence[i:]
 
     return word, remainder

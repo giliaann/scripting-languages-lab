@@ -1,11 +1,8 @@
+from utils.get_sentence import get_sentence
 import sys
 
-sys.path.append("../utils")
 
-from get_sentence import get_sentence
-
-def f_first_20_sentences():
-
+def f_first_20_sentences() -> None:
     sentence, eof = get_sentence()
 
     counter = 0
@@ -20,7 +17,9 @@ def f_first_20_sentences():
     if counter != 20:
         raise ValueError("The file does not contain 20 sentences")
 
+
 if __name__ == "__main__":
-    sys.stdin.reconfigure(encoding="utf-8-sig")
-    sys.stdout.reconfigure(encoding="utf-8")
+    if sys.platform == "win32":
+        sys.stdin.reconfigure(encoding="utf-8-sig")
+        sys.stdout.reconfigure(encoding="utf-8")
     f_first_20_sentences()

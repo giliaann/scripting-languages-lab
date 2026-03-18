@@ -1,7 +1,7 @@
 import sys
 
-def r_chars_count():
 
+def r_chars_count() -> int:
     counter = 0
 
     divisor_series = 0
@@ -14,8 +14,7 @@ def r_chars_count():
             divisor_series += 1
             # eof sequence found
             if divisor_series >= max_divisors:
-                print(counter)
-                return
+                return counter
         else:
             counter += divisor_series
             divisor_series = 0
@@ -25,9 +24,11 @@ def r_chars_count():
 
         c = sys.stdin.read(1)
 
-    print(counter)
+    return counter
+
 
 if __name__ == "__main__":
-    sys.stdin.reconfigure(encoding="utf-8-sig")
-    sys.stdout.reconfigure(encoding="utf-8")
-    r_chars_count()
+    if sys.platform == "win32":
+        sys.stdin.reconfigure(encoding="utf-8-sig")
+        sys.stdout.reconfigure(encoding="utf-8")
+    print(r_chars_count())

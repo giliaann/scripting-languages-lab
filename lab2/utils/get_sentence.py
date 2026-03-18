@@ -18,7 +18,7 @@ def get_sentence():
 
     sentence = ""
 
-    #sentence starts with a letter
+    # sentence starts with a letter
     while c and not c.isalpha():
         if c == "-":
             divisor_series += 1

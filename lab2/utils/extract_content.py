@@ -4,6 +4,7 @@ import sys
 # $OutputEncoding = [System.Text.Encoding]::UTF8
 # cat -Encoding UTF8 ../data/dickens-opowiesc-wigilijna.txt | python extract_content.py
 
+
 def process_preamble():
 
     whitespaces_buffer = ""
@@ -135,8 +136,9 @@ def process_content(c):
 
 def main():
 
-    sys.stdin.reconfigure(encoding="utf-8-sig")
-    sys.stdout.reconfigure(encoding="utf-8")
+    if sys.platform == "win32":
+        sys.stdin.reconfigure(encoding="utf-8-sig")
+        sys.stdout.reconfigure(encoding="utf-8")
 
     preamble_buffer, has_preamble, eof_occured, c = process_preamble()
 
