@@ -1,5 +1,5 @@
 import sys
-from utils.get_paragraph import get_paragraph
+from lab2.utils.get_paragraph import get_paragraph
 
 
 def r_paragraphs_count():

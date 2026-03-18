@@ -1,5 +1,5 @@
 import sys
-from utils.get_sentence import get_sentence
+from lab2.utils.get_sentence import get_sentence
 
 
 class SentenceNotFound(Exception):

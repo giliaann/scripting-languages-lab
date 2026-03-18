@@ -1,6 +1,6 @@
 import sys
-from utils.split_first_word import split_first_word
-from utils.get_sentence import get_sentence
+from lab2.utils.split_first_word import split_first_word
+from lab2.utils.get_sentence import get_sentence
 
 
 def has_two_words_with_same_initial(sentence: str) -> bool:

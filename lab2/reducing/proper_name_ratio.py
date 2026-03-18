@@ -1,5 +1,5 @@
-from utils.split_first_word import split_first_word
-from utils.get_sentence import get_sentence
+from lab2.utils.split_first_word import split_first_word
+from lab2.utils.get_sentence import get_sentence
 import sys
 
 

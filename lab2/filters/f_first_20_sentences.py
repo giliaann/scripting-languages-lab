@@ -1,4 +1,4 @@
-from utils.get_sentence import get_sentence
+from lab2.utils.get_sentence import get_sentence
 import sys
 
 

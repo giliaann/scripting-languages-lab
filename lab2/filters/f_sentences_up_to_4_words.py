@@ -1,6 +1,6 @@
 import sys
-from utils.get_sentence import get_sentence
-from utils.split_first_word import split_first_word
+from lab2.utils.get_sentence import get_sentence
+from lab2.utils.split_first_word import split_first_word
 
 
 def f_sentences_up_to_4_words() -> None:
