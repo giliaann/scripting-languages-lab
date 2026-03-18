@@ -9,7 +9,7 @@ import sys
 # sys.stdout.reconfigure(encoding="utf-8")
 
 
-def get_sentence() -> tuple[str, bool]:
+def get_sentence():
 
     c = sys.stdin.read(1)
 
@@ -70,6 +70,33 @@ def get_sentence() -> tuple[str, bool]:
     return sentence.strip(), eof_occured
 
 
+def split_first_word(sentence):
+    word = ""
+    remainder = ""
+    i = 0
+    while i < len(sentence):
+        c = sentence[i]
+        if c.isalpha():
+            word += c
+        #ommit first whitespaces
+        elif len(word) != 0:
+            break
+        i += 1
+    
+    remainder = sentence[i:]
+
+    return word, remainder
+
+
+def has_proper_name(sentence: str) -> bool:
+    _, sentence = split_first_word(sentence)
+    first_word, sentence = split_first_word(sentence)
+
+    while first_word:
+        if first_word[0].isupper():
+            return True
+        first_word, sentence = split_first_word(sentence)
+    return False
 
 
 def proper_name_ratio() -> float:
@@ -80,16 +107,16 @@ def proper_name_ratio() -> float:
 
     while sentence:
         sentence_counter += 1
-
+        if has_proper_name(sentence):
+            proper_name_sentence_counter += 1
+            print(sentence)
+        
         if eof:
             break
-
-        if any(word[0].isupper() for word in sentence.split()[1:]):
-            proper_name_sentence_counter += 1
-
         sentence, eof = get_sentence()
 
-    return 0 if sentence_counter == 0 else proper_name_sentence_counter / sentence_counter
+    return proper_name_sentence_counter / sentence_counter if sentence_counter != 0 else 0.0
+
 
 # 4 / 7
 if __name__ == '__main__':
