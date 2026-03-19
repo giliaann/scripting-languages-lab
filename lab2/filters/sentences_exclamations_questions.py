@@ -1,14 +1,17 @@
 from lab2.utils.get_sentence import get_sentence
 import sys
 
+def is_exclamation_or_question(sentence: str) -> bool:
+    last_char = sentence[-1]
+    return last_char == "!" or last_char == "?"
+
 
 def f_sentences_exclamations_questions() -> None:
     sentence, eof = get_sentence()
 
     while sentence:
-        last_char = sentence[-1]
 
-        if last_char == "!" or last_char == "?":
+        if is_exclamation_or_question(sentence):
             print(sentence)
 
         if eof:

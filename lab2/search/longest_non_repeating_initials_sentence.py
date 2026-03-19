@@ -8,7 +8,7 @@ def has_two_words_with_same_initial(sentence: str) -> bool:
 
     word, rest = split_first_word(sentence)
     while word:
-        if word[0] == last_first_letter:
+        if word[0].upper == last_first_letter.upper:
             return True
         last_first_letter = word[0]
         word, rest = split_first_word(rest)

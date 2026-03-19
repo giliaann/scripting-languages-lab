@@ -24,18 +24,15 @@ def proper_name_ratio() -> float:
         sentence_counter += 1
         if has_proper_name(sentence):
             proper_name_sentence_counter += 1
-            print(sentence)
 
         if eof:
             break
         sentence, eof = get_sentence()
 
-    return (
-        proper_name_sentence_counter / sentence_counter
-        if sentence_counter != 0
-        else 0.0
-    )
+    if sentence_counter == 0:
+        raise ValueError("No sentence found - cannot count ratio")
 
+    return proper_name_sentence_counter / sentence_counter
 
 if __name__ == "__main__":
     if sys.platform == "win32":

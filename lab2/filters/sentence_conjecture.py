@@ -4,8 +4,7 @@ import sys
 
 
 def is_target_word(word: str) -> bool:
-    return word in {"i", "oraz", "ale", "że", "lub"}
-
+    return word == "i" or word == "oraz" or word == "ale" or word == "że" or word == "lub"
 
 def sentence_conjecture() -> None:
     sentence, eof = get_sentence()

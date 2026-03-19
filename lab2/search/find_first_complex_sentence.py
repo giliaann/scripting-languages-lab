@@ -28,7 +28,7 @@ def find_first_complex_sentence() -> str:
 
         sentence, eof = get_sentence()
 
-    raise SentenceNotFound("W tekscie nie ma ani jednego zdania zlozonego")
+    raise SentenceNotFound("Text does not contain any complex sentence")
 
 
 if __name__ == "__main__":
