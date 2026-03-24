@@ -19,9 +19,3 @@ def read_log():
         for log in sys.stdin 
         if log.strip()
     ]
-
-
-if __name__ == '__main__':
-    logs = read_log()
-    for log in logs[:10]:
-        print(log)
