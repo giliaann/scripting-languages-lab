@@ -1,7 +1,7 @@
 import sys
 from lab3.log_definition import LOG_SCHEMA
         
-#cat lab3\http_first_100k.log | uv run python lab3\read_log.py 
+#cat lab3\http_first_100k.log | uv run python lab3\read_log.py
 
 
 def parse_http_log(data):
