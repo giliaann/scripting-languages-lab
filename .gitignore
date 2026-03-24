@@ -12,8 +12,11 @@ wheels/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# ruff 
+# Ruff 
 .ruff_cache
 
-#commands helper
+# Commands helper
 commands.txt
+
+# Large data files
+*.log
