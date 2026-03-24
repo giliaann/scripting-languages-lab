@@ -1,6 +1,5 @@
 import sys
-from datetime import datetime
-from lab3.log_definition import LogField, LOG_SCHEMA
+from lab3.log_definition import LOG_SCHEMA
         
 #cat lab3\http_first_100k.log | uv run python lab3\read_log.py 
 
