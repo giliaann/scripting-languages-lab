@@ -1,16 +1,12 @@
 import sys
 from datetime import datetime
+from lab3.log_definition import LogField, LOG_SCHEMA
         
 #cat lab3\http_first_100k.log | uv run python lab3\read_log.py 
 
 
 def parse_http_log(data):
-    cast_funcs = (lambda x : datetime.fromtimestamp(float(x)), str, str, int, str, int, int, str, str, str, str, str, int, int, float, str, float, str, float, str, str, float, str, str, str, str, str)
-
-    return tuple(
-        cast_func(val) if val != '-' else None
-        for val, cast_func in zip(data, cast_funcs)
-    )
+    return tuple(log_field.parser(val) for val, log_field in zip(data, LOG_SCHEMA))
 
 
 def read_log():
@@ -19,3 +15,8 @@ def read_log():
         for log in sys.stdin 
         if log.strip()
     ]
+
+
+if __name__ == '__main__':
+    logs = read_log()
+    print(logs[:10])
