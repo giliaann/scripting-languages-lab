@@ -1,15 +1,16 @@
 import sys
-from datetime import datetime
+from LogType import LogType
 
-def read_log():
 
+def read_log() -> list[LogType]:
     logs_list = []
 
     for line in sys.stdin:
         line = line.strip()
 
         # skip empty lines
-        if not line: continue
+        if not line:
+            continue
 
         sep = '\t'
         tokens = line.split(sep)
