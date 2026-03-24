@@ -45,3 +45,9 @@ LOG_SCHEMA = [
     LogField("resp_mime_types", 26),
 ]
 
+
+def get_index(field_name):
+    for i, field in enumerate(LOG_SCHEMA):
+        if field.name == field_name:
+            return i
+    return None
