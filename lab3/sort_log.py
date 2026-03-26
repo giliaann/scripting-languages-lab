@@ -7,7 +7,7 @@ def sort_log(logs, index):
         raise IndexError(f'Tuple index out of bounds for index: {index}. Max index is: {len(LOG_SCHEMA) - 1}')
     
     #sorting function will first notice true/false differnece, and won't compare None to typed value
-    return sorted(logs, key = lambda x: (x[1] is None, x[1]))
+    return sorted(logs, key = lambda x: (x[index] is None, x[index]))
 
 if __name__ == '__main__':
     logs = read_log()
