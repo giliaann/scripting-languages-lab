@@ -12,7 +12,7 @@ from collections import defaultdict
 def check_if_sus(entries, threshold):
     RATIO_OF_SUS = 0.2
     REQUEST_PER_SECOND_THRESHOLD = 100.0
-    REQUEST_THRESHOLD = 50_000
+    
     STATUS_CODE_404_THRESHOLD_RATIO = 0.5
     ts_index = get_index('ts')
     status_code_index = get_index('status_code')
@@ -22,7 +22,7 @@ def check_if_sus(entries, threshold):
     if length < threshold * RATIO_OF_SUS:
         return False
 
-    if length > REQUEST_THRESHOLD:
+    if length > threshold:
         return True
 
     first = min(entries, key = lambda entry : entry[ts_index])[ts_index]
