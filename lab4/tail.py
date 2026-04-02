@@ -1,0 +1,73 @@
+import sys
+import time
+import typer
+from pathlib import Path
+from collections import deque
+from collections.abc import Iterable
+from file_read_backwards import FileReadBackwards
+from itertools import islice
+
+
+app = typer.Typer()
+
+
+def read_last_lines(lines_iter: Iterable[str], n: int) -> Iterable[str]:
+    return deque(lines_iter, maxlen=n)
+
+
+def read_last_lines_file(filepath: Path, n: int) -> Iterable[str]:
+    with FileReadBackwards(filepath, encoding='utf-8') as f:
+        lines = tuple(islice(f, n))
+    return reversed(lines)
+
+
+def follow_file(filepath: Path) -> None:
+    with open(filepath, 'r', encoding='utf-8') as f:
+        f.seek(0, 2)
+        while True:
+            line = f.readline()
+            if line:
+                sys.stdout.write(line)
+                sys.stdout.flush()
+            else:
+                time.sleep(0.2)
+    
+
+
+@app.command()
+def tail(
+    file: Path | None = typer.Argument(None),
+    lines: int = typer.Option(10, '--lines', '-n', min=0),
+    follow: bool = typer.Option(False, '--follow', '-f')
+):
+    use_file = file is not None
+
+    if use_file:
+        if not file.is_file():
+            typer.echo(f'Error: {file} is not a file', err=True)
+            raise typer.Exit(1)
+        last_lines = read_last_lines_file(file, lines)
+    else:
+        if follow:
+            typer.echo('Error: option --follow need filepath given', err=True)
+            raise typer.Exit(1)
+        
+        if sys.stdin.isatty():
+            typer.echo('Error: no data on input and not filepath given', err=True)
+            raise typer.Exit(1)
+        
+        last_lines = read_last_lines(sys.stdin, lines)
+
+    for line in last_lines:
+        sys.stdout.write(line if line.endswith('\n') else line + '\n')
+    sys.stdout.flush()
+
+    if use_file and follow:
+        try:
+            follow_file(file)
+        except KeyboardInterrupt:
+            raise typer.Exit(0)
+
+
+if __name__=='__main__':
+    app()
