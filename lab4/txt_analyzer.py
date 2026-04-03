@@ -9,10 +9,10 @@ def read_path() -> Path | None:
 
 def analyze(file_path: Path) -> str:
     
-    results = {}
-
-    results['lines'] = 0
-    results['path'] = str(file_path)
+    results = {
+        'lines' : 0,
+        'path' : str(file_path)
+    }
 
     chars_counter = Counter()
     words_counter = Counter()
