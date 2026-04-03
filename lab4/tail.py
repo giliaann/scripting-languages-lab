@@ -31,6 +31,14 @@ def follow_file(filepath: Path) -> None:
                 sys.stdout.flush()
             else:
                 time.sleep(0.2)
+                #checking if file has been moved or removed
+                try:
+                    #checking if file has been truncated
+                    current_size = filepath.stat().st_size
+                    if f.tell() > current_size:
+                        f.seek(0) 
+                except FileNotFoundError:
+                    typer.echo(f'Error: file ceased to exist at this path: {filepath}')
     
 
 
