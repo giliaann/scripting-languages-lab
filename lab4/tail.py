@@ -38,7 +38,8 @@ def follow_file(filepath: Path) -> None:
                     if f.tell() > current_size:
                         f.seek(0) 
                 except FileNotFoundError:
-                    typer.echo(f'Error: file ceased to exist at this path: {filepath}')
+                    typer.echo(f'Error: file ceased to exist at this path: {filepath}', err=True)
+                    raise typer.Exit(1)
     
 
 
