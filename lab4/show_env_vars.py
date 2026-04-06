@@ -7,10 +7,7 @@ def show_env_vars() -> None:
     env_vars = os.environ
 
     if lower_args:
-        filtered_env_vars = (
-            (k, v) for k, v in env_vars.items()
-            if any(arg in k.lower() for arg in lower_args)
-        )
+        filtered_env_vars = ((k, v) for k, v in env_vars.items() if any(arg in k.lower() for arg in lower_args))
     else:
         filtered_env_vars = env_vars.items()
 
