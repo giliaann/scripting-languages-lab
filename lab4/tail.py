@@ -25,9 +25,9 @@ def follow_file(filepath: Path) -> None:
     with open(filepath, "r", encoding="utf-8") as f:
         f.seek(0, 2)
         while True:
-            line = f.readline()
-            if line:
-                sys.stdout.write(line)
+            new_content = f.read()
+            if new_content:
+                sys.stdout.write(new_content)
                 sys.stdout.flush()
             else:
                 time.sleep(0.2)
