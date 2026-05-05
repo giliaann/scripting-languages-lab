@@ -20,3 +20,6 @@ commands.txt
 
 # Large data files
 *.log
+
+# Data files for lab5
+lab5/data
