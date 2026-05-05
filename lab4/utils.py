@@ -60,6 +60,10 @@ def magick(in_path: Path, out_path: Path) -> list[str]:
     return ["magick" if shutil.which("magick") else "convert", str(in_path), str(out_path)]
 
 
+@register_media_converter("text")
+def pandoc(in_path: Path, out_path: Path) -> list[str]:
+    return["pandoc", str(in_path), "-o", str(out_path)]
+
 def get_handle(media_type: str) -> media_conv | None:
     return media_convert_registy.get(media_type)
 
