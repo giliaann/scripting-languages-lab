@@ -61,7 +61,7 @@ def parse_metadata_file(path):
 
     with open(path, mode = 'r', encoding='utf-8') as file:
         
-        columns_names = ['id', 'code', 'international_code', 'old_code', 'launch_date', 'close_date', 'station_type', 'area_type', 'operation_type', 'voivodeship', 'locality', 'address', 'WGS84N', 'WGS84E']
+        columns_names = ['id', 'code', 'international_code', 'name', 'old_code', 'launch_date', 'close_date', 'station_type', 'area_type', 'operation_type', 'voivodeship', 'locality', 'address', 'WGS84N', 'WGS84E']
 
         reader = csv.reader(file)
         
@@ -76,10 +76,15 @@ def parse_metadata_file(path):
             data[code] = {}
 
             #reading id
-            data[code][columns_names[0]] = row[0]
+            data[code][columns_names[0]] = row[0].strip()
 
             #starting from third element to ommit station code which is second
             for str_value, column_name in zip (row[2:], columns_names[2:]):
-                data[code][column_name] = str_value
+                data[code][column_name] = str_value.strip()
             
     return data
+
+pl_latin_char_map = {
+        'ą':'a', 'ć':'c', 'ę':'e', 'ł':'l', 'ń':'n', 'ó':'o', 'ś':'s', 'ź':'z', 'ż':'z',
+        'Ą':'A', 'Ć':'C', 'Ę':'E', 'Ł':'L', 'Ń':'N', 'Ó':'O', 'Ś':'S', 'Ź':'Z', 'Ż':'Z'
+        }
