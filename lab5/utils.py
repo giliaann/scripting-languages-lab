@@ -1,4 +1,6 @@
 import csv
+import logging
+import sys
 
 '''
 Parsing measurements data files
@@ -11,28 +13,48 @@ Output format of function:
 }
 '''
 
-def parse_measurements_file(path):
+def parse_measurements_file(path, log = False):
     
+    if log and not path.exists():
+        logging.critical(f"File {path} does not exist!")
+
     data = {}
+
+    if log:
+        logging.info(f"Opened file: {path}")
 
     with open(path, mode = 'r', encoding='utf-8') as file:
         
         reader = csv.reader(file)
         
-        next(reader) #stations numbers skip
+        row = next(reader) #stations numbers skip
         
-        station_codes = next(reader)[1:]
+        if log:
+            logging.debug(f"Read: {sum(len(s.encode('utf-8')) for s in row)} bytes")
+        
+        row = next(reader)
+
+        if log:
+            logging.debug(f"Read: {sum(len(s.encode('utf-8')) for s in row)} bytes")
+
+        station_codes = row[1:]
+
 
         for station_code in station_codes:
             data[station_code] = {}
 
-        for _ in range(4): #measurments data skip
-            next(reader)
+        for row in range(4):
+            #measurments data skip
+            row = next(reader)
+            if row:
+                logging.debug(f"Read: {sum(len(s.encode('utf-8')) for s in row)} bytes")
 
         for row in reader:
-            
             if not row:
                 continue
+
+            if log:
+                logging.debug(f"Read: {sum(len(s.encode('utf-8')) for s in row)} bytes")
 
             date = row[0]
             values = row[1:]
@@ -40,6 +62,9 @@ def parse_measurements_file(path):
             for station_code, str_value in zip (station_codes, values):
                 #setting proper float value for non empty strings, None otherwise
                 data[station_code][date] = float (str_value) if str_value.strip() else None
+
+    if log:
+        logging.info(f"Closed file: {path}")
 
     return data
 
@@ -55,9 +80,15 @@ Output format of function:
 
 '''
 
-def parse_metadata_file(path):
+def parse_metadata_file(path, log = False):
+
+    if log and not path.exists():
+        logging.critical(f"File {path} does not exist!")
 
     data = {}
+
+    if log:
+        logging.info(f"Opened file: {path}")
 
     with open(path, mode = 'r', encoding='utf-8') as file:
         
@@ -65,11 +96,20 @@ def parse_metadata_file(path):
 
         reader = csv.reader(file)
         
-        next(reader) #header skip
+        row = next(reader) #header skip
+
+        if log:
+                logging.debug(f"Read: {sum(len(s.encode('utf-8')) for s in row)} bytes")
         
         for row in reader:
-        
-            if not row or not (code := row[1].strip()):
+            
+            if not row:
+                continue
+            
+            if log:
+                logging.debug(f"Read: {sum(len(s.encode('utf-8')) for s in row)} bytes")
+
+            if not (code := row[1].strip()):
                 continue
 
 
@@ -81,6 +121,9 @@ def parse_metadata_file(path):
             #starting from third element to ommit station code which is second
             for str_value, column_name in zip (row[2:], columns_names[2:]):
                 data[code][column_name] = str_value.strip()
+
+    if log:
+        logging.info(f"Closed file: {path}")
             
     return data
 
