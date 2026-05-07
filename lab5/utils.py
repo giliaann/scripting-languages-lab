@@ -14,11 +14,14 @@ Output format of function:
 '''
 
 def parse_measurements_file(path, log = False):
-    
-    if log and not path.exists():
-        logging.critical(f"File {path} does not exist!")
 
     data = {}
+
+    if not path.is_file():
+        if log:
+            logging.critical(f"File {path} does not exist or is not a file!")
+        return data
+
 
     if log:
         logging.info(f"Opened file: {path}")
@@ -82,10 +85,12 @@ Output format of function:
 
 def parse_metadata_file(path, log = False):
 
-    if log and not path.exists():
-        logging.critical(f"File {path} does not exist!")
-
     data = {}
+
+    if not path.is_file():
+        if log:
+            logging.critical(f"File {path} does not exist or is not a file - cannot read metadata")
+        return data
 
     if log:
         logging.info(f"Opened file: {path}")

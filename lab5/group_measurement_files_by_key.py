@@ -11,9 +11,14 @@ Output format:
 }
 '''
 
-def group_measurement_files_by_key(path: Path):
+def group_measurement_files_by_key(path: Path, log):
     
     result = {}
+
+    if not path.is_dir():
+        if log:
+            logging.critical(f"{path} is not a directory - measurement files not found!")
+        return result
 
     for file_path in path.iterdir():
         if not file_path.is_file():

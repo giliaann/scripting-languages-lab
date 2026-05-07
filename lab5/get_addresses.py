@@ -9,7 +9,7 @@ Output format: [(<voivodeship>, <city>, <street>, <number> (if any)), ... ]
 '''
 
 def get_addresses(path: Path, city: str):
-    data = parse_metadata_file(path)
+    data = parse_metadata_file(path, False)
     pattern = re.compile(r'^(.*?)(?:\s+(\d+\S*))?$')
     result = []
 
