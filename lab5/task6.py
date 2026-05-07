@@ -6,10 +6,46 @@ from group_measurement_files_by_key import group_measurement_files_by_key
 from utils import parse_measurements_file, parse_metadata_file
 import random
 import statistics
+from dataclasses import dataclass
+from anomaly_detection import Measurement, detect_anomalies
 
 
 MEASUREMENTS_DIR = Path('lab5/data/measurements')
 METADATA_FILE_PATH = Path('lab5/data/stacje.csv')
+
+def get_station_measurments(
+        station_code: str,
+        measurand: str,
+        freq: str,
+        start: datetime,
+        end: datetime,
+        measurments_dir: Path = MEASUREMENTS_DIR
+) -> list[Measurement]:
+    measurments_dict = group_measurement_files_by_key(measurments_dir)
+    found_paths = [
+        path for (y,m,f), path in measurments_dict.items()
+        if str(start.year) <= y <= str(end.year) and m == measurand and f == freq
+    ]
+    result: list[Measurement] = []
+    for file_path in found_paths:
+        all_measurements = parse_measurements_file(file_path, True)
+        station_data = all_measurements.get(station_code, {})
+
+        for date_str, value in station_data.items():
+            try:
+                date_obj = datetime.strptime(date_str, "%m/%d/%y %H:%M")
+            except ValueError:
+                continue
+                
+            if start <= date_obj <= end:
+                meas_obj = Measurement(
+                    date = date_obj,
+                    value=value,
+                    station=station_code,
+                    measurement=measurand
+                )
+                result.append(meas_obj)
+    return sorted(result, key = lambda x : x.date)
 
 app = typer.Typer(help="System analizy danych pomiarowych (ale ten w Typer)")
 
@@ -151,6 +187,29 @@ def stats_for_station(
     typer.echo(f"Mean: {mean}\nStd: {std}")
 
 
+@app.command()
+def detect_station_anomalies(
+    station: Annotated[str, typer.Argument(..., help="Station code")]
+):
+    """
+    Detects anomalies
+    """
+    measurments_list = get_station_measurments(station, state.measurand, state.freq, state.start, state.end, MEASUREMENTS_DIR)
+    if not measurments_list:
+        typer.secho(f'{station} does not measure {state.measurand} in period ({state.start} - {state.end}) at frequency {state.freq}', fg=typer.colors.YELLOW)
+        raise typer.Exit(0)
+
+    anomalies = detect_anomalies(measurments_list)
+
+    if anomalies:
+        typer.secho(f"Anomalies detected for {station} for {state.measurand} in period ({state.start} - {state.end}) at frequency {state.freq}:", fg=typer.colors.RED, bold=True)
+        for anomaly in anomalies:
+            typer.echo(f"- {anomaly}")
+    else:
+        typer.secho(f"No anomalies detected for {station}.", fg=typer.colors.GREEN)
+
+
 
 if __name__ == "__main__":
     app()
+
