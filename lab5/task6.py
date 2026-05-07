@@ -5,6 +5,7 @@ from pathlib import Path
 from group_measurement_files_by_key import group_measurement_files_by_key
 from utils import parse_measurements_file, parse_metadata_file
 import random
+import statistics
 
 
 MEASUREMENTS_DIR = Path('lab5/data/measurements')
@@ -102,7 +103,7 @@ def random_station():
                         date = datetime.strptime(date, "%m/%d/%y %H:%M")
                     except ValueError:
                         typer.secho(f"Cannot parse date {date}", fg=typer.colors.YELLOW)
-                        continue # TODO logowanie?
+                        continue
                     if state.start <= date <= state.end:
                         station_codes.add(station_code)
                         break
@@ -119,12 +120,35 @@ def random_station():
 
 @app.command()
 def stats_for_station(
-    station: Annotated[str, typer.Argument(..., help="Station code")], # callback?
+    station: Annotated[str, typer.Argument(..., help="Station code")],
 ):
     """
     Prints mean and standard deviation of measurements for given station, measurand, frequency and period
     """
-    typer.echo(f"Statystyki dla stacji: {station}")
+    
+    # wyszukanie danych na temat konkretnego pomieru w danym okresie czasu dla konkretnej stacji
+    measurements_dict = group_measurement_files_by_key(MEASUREMENTS_DIR)
+    found_paths = [found_path for (y,m,f), found_path in measurements_dict.items() if str(state.start.year) <= y <= str(state.end.year) and state.freq == f and state.measurand == m]
+    if not found_paths:
+        typer.secho(f'{station} does not measure {state.measurand} in period ({state.start} - {state.end}) at frequency {state.freq}', fg=typer.colors.YELLOW)
+        raise typer.Exit(0)
+    found_path = found_paths[0]
+
+    measurements = parse_measurements_file(found_path).get(station, {})
+    
+    if not measurements:
+        typer.secho(f'{station} does not measure {state.measurand} in period ({state.start} - {state.end}) at frequency {state.freq}', fg=typer.colors.YELLOW)
+        raise typer.Exit(0)
+    
+    data = []
+    for date, value in measurements.items():
+        if state.start <= datetime.strptime(date, "%m/%d/%y %H:%M") <= state.end and value:
+            data.append(value)
+
+    mean = statistics.mean(data)
+    std = statistics.stdev(data)
+
+    typer.echo(f"Mean: {mean}\nStd: {std}")
 
 
 
