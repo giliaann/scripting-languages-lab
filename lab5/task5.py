@@ -6,6 +6,7 @@ from utils import parse_measurements_file, parse_metadata_file
 from datetime import datetime
 from pathlib import Path
 from group_measurement_files_by_key import group_measurement_files_by_key
+import numpy as np
 
 MEASUREMENTS_DIR = 'lab5/data/measurements'
 METADATA_FILE_PATH = 'lab5/data/stacje.csv'
@@ -42,21 +43,26 @@ def validate_date(date_str):
 def validate_measurand(value):
     return value #idk how
 
-def random_measuring_station_data(args):
-    
-    measurements_dict = group_measurement_files_by_key(Path(MEASUREMENTS_DIR))
+'''
+This function returns list of pairs (<station_code>, <station_meaurement_data_dict>) of stations that measures
+given measurand with given frequency in given period
+'''
+
+def find_valid_stations(args):
+    measurements_dict = group_measurement_files_by_key(Path(MEASUREMENTS_DIR), True)
     
     measurand = args.measurand
-    year = str(args.start.year)
+    year_start = str(args.start.year)
+    year_end = str(args.end.year)
     freq = args.freq
 
-    found_paths = [found_path for (y,m,f), found_path in measurements_dict.items() if (year == y and freq == f and measurand == m)]
+    found_paths = [found_path for (y,m,f), found_path in measurements_dict.items() if ((year_end == y or year_start == y) and freq == f and measurand == m)]
+
+    valid_stations = []
 
     if not found_paths:
-        logging.warning(f'No station measures {measurand} in year {year}')
-        return '',''
-    
-    valid_stations_codes = []
+        logging.warning(f'No station measures {measurand} in years {year_start, year_end} with freq {freq}')
+        return valid_stations
 
     for found_path in found_paths:
         measurements = parse_measurements_file(Path(found_path), True)
@@ -72,25 +78,71 @@ def random_measuring_station_data(args):
                         logging.warning(f'Cannot parse date: {date}')
                         continue
                     if args.start < date < args.end:
-                        valid_stations_codes.append(station_code)
+                        valid_stations.append((station_code, data))
                         break
 
-    if not valid_stations_codes:
-        logging.warning(f'No station measures {measurand} between {args.start} and {args.end}')
-        return '',''
+    if not valid_stations:
+        logging.warning(f'No station measures {args.measurand} between {args.start} and {args.end}')
+    
+    return valid_stations
+
+
+def random_measuring_station_data(args):
+    
+    valid_stations = find_valid_stations(args)
+
+    if not valid_stations:
+        return None, None
 
     metadata = parse_metadata_file(Path(METADATA_FILE_PATH), True)
 
-    random_station_code = random.choice(valid_stations_codes)
+    if not metadata:
+        return None, None
 
-    station_data = metadata[random_station_code]
+    random_station_code = random.choice(valid_stations)
+
+    station_data = metadata[random_station_code[0]]
 
     return station_data['name'], f'{station_data['voivodeship'], station_data['locality'], station_data['address']}'
 
 
 def stats_for_station(args):
-    pass
     
+    valid_stations = find_valid_stations(args)
+
+    if not valid_stations:
+        return None,None
+    
+    found_station = None
+
+    for station_code, data in valid_stations:
+        if station_code == args.station_code.strip():
+            found_station = (station_code, data)
+            break
+
+    if not found_station:
+        logging.warning(f'Station {args.station_code} does not measure {args.measurand} between {args.start} and {args.end} with freq {args.freq}')
+        return None, None
+    
+
+    measured_values = []
+
+    for date, value in found_station[1].items():
+        if value:
+            try:
+                date =  datetime.strptime(date, '%m/%d/%y %H:%M').date()
+            except ValueError:
+                logging.warning(f'Cannot parse date: {date}')
+                continue
+            if args.start < date < args.end:
+                measured_values.append(value)
+
+    if not measured_values:
+        logging.warning(f'Station {args.station_code} does not measure {args.measurand} between {args.start} and {args.end} with freq {args.freq}')
+        return None, None
+
+    return np.mean(measured_values), np.std(measured_values, ddof=1)
+
 
 def main():
     setup_logging()
@@ -114,9 +166,13 @@ def main():
     parse_metadata_file(Path('lab5\data\stacje.csv'), True)
 
     if args.command == "random":
-        print(f'Random name and addres of station: \n {random_measuring_station_data(args)}')
+        name, address = random_measuring_station_data(args)
+        if name or address:
+            print(f'Random name and addres of station: \n {name}, {address}')
     elif args.command == "stats":
-        stats_for_station()
+        mean, std = stats_for_station(args)
+        if mean and std:
+            print(f'Statistics for {args.station_code} measurement of {args.measurand} between {args.start} and {args.end}:\nmean = {mean}\nstd = {std}')
 
 if __name__ == "__main__":
     main()
