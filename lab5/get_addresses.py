@@ -1,7 +1,7 @@
 from utils import parse_metadata_file
 from pathlib import Path
 import re
-
+from pprint import pprint
 
 '''
 This function filters station metadata, leaves only data for a given city and extract addresses
@@ -28,6 +28,6 @@ def get_addresses(path: Path, city: str):
 
 
 if __name__ == "__main__":
-    print(get_addresses(Path('lab5/data/stacje.csv'), 'Szczecin'))
+    pprint(get_addresses(Path('lab5/data/stacje.csv'), 'Jelenia Góra'))
 
 
