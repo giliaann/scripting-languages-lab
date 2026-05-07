@@ -41,8 +41,16 @@ def validate_date(date_str):
         raise argparse.ArgumentTypeError(f"Ivalid date format: {date_str}. Use YYYY-MM-DD.")
 
 def validate_measurand(value):
-    return value #idk how
-
+    valid_measurands = [
+        "As(PM10)", "BaA(PM10)", "BaP(PM10)", "BbF(PM10)", "BjF(PM10)", 
+        "BkF(PM10)", "C6H6", "Cd(PM10)", "CO", "DBahA(PM10)", "Depozycja", 
+        "formaldehyd", "Hg(TGM)", "IP(PM10)", "Jony_PM25", "Ni(PM10)", 
+        "NO", "NO2", "NOx", "O3", "Pb(PM10)", "PM10", "PM25", "SO2"
+    ]
+    
+    if value not in valid_measurands:
+        raise argparse.ArgumentTypeError(f'Measurand {value} is not supported. Supported values: \n {valid_measurands}' )
+    return value
 '''
 This function returns list of pairs (<station_code>, <station_meaurement_data_dict>) of stations that measures
 given measurand with given frequency in given period
