@@ -31,4 +31,4 @@ def group_measurement_files_by_key(path: Path, log):
     return result
 
 if __name__ == "__main__":
-    pprint(group_measurement_files_by_key(Path('lab5/data/measurements')))
+    pprint(group_measurement_files_by_key(Path('lab5/data/measurements'), False))
