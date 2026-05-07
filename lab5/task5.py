@@ -11,6 +11,13 @@ import numpy as np
 MEASUREMENTS_DIR = 'lab5/data/measurements'
 METADATA_FILE_PATH = 'lab5/data/stacje.csv'
 
+VALID_MEASURANDS = [
+        "As(PM10)", "BaA(PM10)", "BaP(PM10)", "BbF(PM10)", "BjF(PM10)", 
+        "BkF(PM10)", "C6H6", "Cd(PM10)", "CO", "DBahA(PM10)", "Depozycja", 
+        "formaldehyd", "Hg(TGM)", "IP(PM10)", "Jony_PM25", "Ni(PM10)", 
+        "NO", "NO2", "NOx", "O3", "Pb(PM10)", "PM10", "PM25", "SO2"
+    ]
+
 def setup_logging():
     logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
@@ -41,15 +48,8 @@ def validate_date(date_str):
         raise argparse.ArgumentTypeError(f"Ivalid date format: {date_str}. Use YYYY-MM-DD.")
 
 def validate_measurand(value):
-    valid_measurands = [
-        "As(PM10)", "BaA(PM10)", "BaP(PM10)", "BbF(PM10)", "BjF(PM10)", 
-        "BkF(PM10)", "C6H6", "Cd(PM10)", "CO", "DBahA(PM10)", "Depozycja", 
-        "formaldehyd", "Hg(TGM)", "IP(PM10)", "Jony_PM25", "Ni(PM10)", 
-        "NO", "NO2", "NOx", "O3", "Pb(PM10)", "PM10", "PM25", "SO2"
-    ]
-    
-    if value not in valid_measurands:
-        raise argparse.ArgumentTypeError(f'Measurand {value} is not supported. Supported values: \n {valid_measurands}' )
+    if value not in VALID_MEASURANDS:
+        raise argparse.ArgumentTypeError(f'Measurand {value} is not supported. Supported values: \n {VALID_MEASURANDS}' )
     return value
 '''
 This function returns list of pairs (<station_code>, <station_meaurement_data_dict>) of stations that measures
@@ -64,7 +64,7 @@ def find_valid_stations(args):
     year_end = str(args.end.year)
     freq = args.freq
 
-    found_paths = [found_path for (y,m,f), found_path in measurements_dict.items() if ((year_end == y or year_start == y) and freq == f and measurand == m)]
+    found_paths = [found_path for (y,m,f), found_path in measurements_dict.items() if ((year_start <= y <= year_end) and freq == f and measurand == m)]
 
     valid_stations = []
 
