@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import datetime, date
 import numpy as np
+import numpy.typing as npt
 
 
 @dataclass
@@ -9,39 +10,46 @@ class TimeSeries:
     station_code: str
     averaging_time: str
     dates: list[datetime]
-    values: np.ndarray[float | None]
+    values: npt.NDAarray[float | None]
     unit: str
 
     def __post_init__(self):
+        if not isinstance(self.dates, np.ndarray):
+            self.dates = np.array(self.dates)
         if not isinstance(self.values, np.ndarray):
             self.values = np.array(self.values)
+        if len(self.dates) != len(self.values):
+            raise ValueError(f"Invalid data, length of dates {len(self.dates)} is not equal to length of values {len(self.values)}")
 
     
     def __len__(self):
-        return len(min(self.dates, self.values))
+        return min(len(self.dates), len(self.values))
 
 
-    def __getitem__(self, key):
-        if isinstance(key, (int, slice)):
-            result_dates = self.dates[key]
-            result_values = self.values[key]
-            if isinstance(key, int):
-                return (result_dates, result_values)
-            return list(zip(result_dates, result_values))
-        
-        if isinstance(key, (datetime, date)):
-            indices = [
-                i for i, d in enumerate(self.dates)
-                if d == key or (not isinstance(key, datetime) and d.date() == key)
-            ]
-            if not indices:
-                raise KeyError
-            results = self.values[indices].tolist()
-            return results[0] if len(results) == 1 else results
-        raise TypeError(f"Invalid index type: {type(key).__name__}")
+    def __getitem__(self, key: int | slice | datetime | date):
+        match key:
+            case int():
+                return self.dates[key], self.values[key]
+            case slice():
+                return list(zip(self.dates[key], self.values[key]))
+            case datetime():
+                try:
+                    idx = self.dates.index(key)
+                    return self.values[idx]
+                except ValueError:
+                    raise KeyError(f"No datetie key: {key}")
+            case date():
+                result = [
+                    val for d, val in zip(self.dates, self.values)
+                    if d is not None and d.date() == key
+                ]
+                if not result:
+                    raise KeyError(f"No date key: {key}")
+                return result
+            case _:
+                raise TypeError(f"Invalid index type: {type(key).__name__}")
     
 
-    @property
     def __numeric_values(self):
         valid_data = self.values[self.values != None]
         return valid_data.astype(float)
@@ -49,11 +57,11 @@ class TimeSeries:
 
     @property
     def mean(self) -> float | None:
-        data = self.__numeric_values
+        data = self.__numeric_values()
         return float(np.mean(data)) if data.size != 0 else None
     
 
     @property
     def stddev(self) -> float | None:
-        data = self.__numeric_values
+        data = self.__numeric_values()
         return float(np.std(data)) if data.size != 0 else None
