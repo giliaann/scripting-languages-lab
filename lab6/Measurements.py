@@ -3,6 +3,7 @@ import re
 from pathlib import Path
 from typing import List, Dict, Set, Union
 from TimeSeries import TimeSeries
+from SeriesValidator import *
 from utils import parse_measurement_file
 
 class Measurements:
@@ -34,7 +35,7 @@ class Measurements:
                     }
 
     def _build_station_registry(self):
-        """Reads only first two lines in all files. Checks which stations are included and count them for each file"""
+        '''Reads only first two lines in all files. Checks which stations are included and count them for each file'''
         if self._station_to_files and self._file_to_ts_count:
             return
             
@@ -99,6 +100,34 @@ class Measurements:
                 results.extend([ts for ts in all_ts if ts.station_code == station_code])
         return results
     
+    def detect_all_anomalies(self, validators: list[SeriesValidator], preload: bool = False):
+        '''Returns list of (ts_brief, anomaly_msg list). 
+        If preload is set to True, TimeSeries for all files are analyzed. Otherwise only cache is analyzed'''
+        anomalies_messages = []
+
+        ts_lists = [self._get_ts(path) for path in self._files_metadata] if preload else self._cache.values()
+
+        for sub_list in ts_lists:
+            for ts in sub_list:
+                msg_list = []
+                for validator in validators:
+    
+                    if msg:= validator.analyze(ts):
+                        msg_list.extend(msg)
+
+                if msg_list:
+                    ts_brief = (
+                        ts.indicator_name, 
+                        ts.station_code, 
+                        ts.averaging_time, 
+                        min(ts.dates) if len(ts.dates) else None, 
+                        max(ts.dates) if len(ts.dates) else None
+                        )
+                    anomalies_messages.append((ts_brief, msg_list))
+
+        return anomalies_messages
+            
+    
 if __name__ == "__main__":
     base_path = Path(__file__).parent
     measurements_folder = base_path / "data" / "measurements"
@@ -110,11 +139,17 @@ if __name__ == "__main__":
     measurand = 'CO'
     print(f'TimeSeries for {measurand} measurand')
     print([f'| {x.indicator_name}, {x.station_code}, {x.mean:.2} {x.unit} |' for x in ms.get_by_parameter(measurand)[:5]])
-    
+    print('-'*20)
     code = 'DsJelGorOgin'
     print(f'TimeSeries for station "{code}"')
     print([f'| {x.indicator_name}, {x.station_code}, {x.mean:.2} {x.unit} |' for x in ms.get_by_station(code)[:5]])
-    
-
-
+    print('-'*20)
+    series_validators = [ZeroSpikeDetector(), OutlierDetector(5.), ThresholdDetector(90.)]
+    n = 3
+    m = 5
+    print(f'First {n} detected anomalies for {m} TimeSeries:')
+    anomalies = [(brief, msg[:n]) for brief, msg in ms.detect_all_anomalies(series_validators, True)[:m]]
+    for x in anomalies:
+        print(x)
+        print('-'*10)
     
