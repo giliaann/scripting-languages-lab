@@ -101,9 +101,12 @@ class Measurements:
         return results
     
     def detect_all_anomalies(self, validators: list[SeriesValidator], preload: bool = False):
-        '''Returns list of (ts_brief, anomaly_msg list). 
-        If preload is set to True, TimeSeries for all files are analyzed. Otherwise only cache is analyzed'''
-        anomalies_messages = []
+        '''
+        Returns dict TimeSeries_brief : anomalies_list. 
+        If preload is set to True, TimeSeries for all files are analyzed. Otherwise only cache is analyzed
+        '''
+        
+        ts_to_anomalies = {}
 
         ts_lists = [self._get_ts(path) for path in self._files_metadata] if preload else self._cache.values()
 
@@ -116,16 +119,17 @@ class Measurements:
                         msg_list.extend(msg)
 
                 if msg_list:
+
                     ts_brief = (
                         ts.indicator_name, 
                         ts.station_code, 
                         ts.averaging_time, 
-                        min(ts.dates) if len(ts.dates) else None, 
-                        max(ts.dates) if len(ts.dates) else None
+                        min(ts.dates), 
+                        max(ts.dates)
                         )
-                    anomalies_messages.append((ts_brief, msg_list))
+                    ts_to_anomalies[ts_brief] = msg_list
 
-        return anomalies_messages
+        return ts_to_anomalies
             
     
 if __name__ == "__main__":
@@ -144,12 +148,18 @@ if __name__ == "__main__":
     print(f'TimeSeries for station "{code}"')
     print([f'| {x.indicator_name}, {x.station_code}, {x.mean:.2} {x.unit} |' for x in ms.get_by_station(code)[:5]])
     print('-'*20)
+    
     series_validators = [ZeroSpikeDetector(), OutlierDetector(5.), ThresholdDetector(90.)]
     n = 3
     m = 5
+    ts_to_anomalies = ms.detect_all_anomalies(series_validators, True)
+    
     print(f'First {n} detected anomalies for {m} TimeSeries:')
-    anomalies = [(brief, msg[:n]) for brief, msg in ms.detect_all_anomalies(series_validators, True)[:m]]
-    for x in anomalies:
-        print(x)
+    for ts, anomalies in ts_to_anomalies.items():
+        print(ts, anomalies[:n])
         print('-'*10)
+        
+        m-=1
+        if m<= 0: 
+            break
     
