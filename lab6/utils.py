@@ -2,11 +2,10 @@ import csv
 import numpy as np
 from datetime import datetime
 from pathlib import Path
-from typing import List, Union
 from TimeSeries import TimeSeries
 
 
-def parse_measurement_file(file_path: Union[str, Path]) -> List[TimeSeries]:
+def parse_measurement_file(file_path: str | Path) -> list[TimeSeries]:
     """
     Parses measurment file. Retuns list of TimeSeries.
     """

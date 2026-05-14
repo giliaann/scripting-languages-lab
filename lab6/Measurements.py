@@ -1,28 +1,30 @@
 import csv
 import re
 from pathlib import Path
-from typing import List, Dict, Set, Union
 from TimeSeries import TimeSeries
 from SeriesValidator import *
 from utils import parse_measurement_file
+from collections import defaultdict
+
 
 class Measurements:
-    def __init__(self, directory_path: Union[str, Path]):
+    def __init__(self, directory_path: str | Path):
         
         self.directory_path = Path(directory_path)
         
-        self._files_metadata: Dict[Path, Dict] = {}
-        self._station_to_files: Dict[str, Set[Path]] = {}
-        self._file_to_ts_count: Dict[Path, int] = {}
-        self._cache: Dict[Path, List[TimeSeries]] = {}
+        self._files_metadata: dict[Path, dict] = {}
+        self._station_to_files: dict[str, set[Path]] = defaultdict(set)
+        self._file_to_ts_count: dict[Path, int] = {}
+        self._cache: dict[Path, list[TimeSeries]] = {}
 
         self._identify_files_by_name()
 
     def _identify_files_by_name(self):
+        '''Adds files metadata to dictionary in a format: file_path : {year: str, parameter: str, freq: str}'''
         if not self.directory_path.is_dir():
             raise FileNotFoundError(f"{self.directory_path} is not a directory")
 
-        pattern = re.compile(r"(\d{4})_(.*?)_(.*?)\.csv")
+        pattern = re.compile(r"(\d{4})_(.*)_(.*?)\.csv")
         
         for file_path in self.directory_path.iterdir():
             if file_path.is_file() and file_path.suffix == '.csv':
@@ -53,16 +55,14 @@ class Measurements:
                     
                     self._file_to_ts_count[path] = len(stations_codes)
                     for s in stations_codes:
-                        if s not in self._station_to_files:
-                            self._station_to_files[s] = set()
                         self._station_to_files[s].add(path)
 
                 except StopIteration:
                     continue
                     
-        self._is_indexed = True
+        self._is_indexed = True # ???
 
-    def _get_ts(self, path: Path) -> List[TimeSeries]:
+    def _get_ts(self, path: Path) -> list[TimeSeries]:
         '''Reads data from TimeSeries cache or reads it into cache and returns it.'''
         if path in self._cache:
             return self._cache[path]
@@ -79,10 +79,14 @@ class Measurements:
 
     def __contains__(self, param_name: str) -> bool:
         '''Checks if any station measures given measurement'''
-        return any(meta['parameter'] == param_name 
-                   for meta in self._files_metadata.values())
+        self._build_station_registry()
+        return any(
+            meta['parameter'] == param_name
+            for path, meta in self._files_metadata.items()
+            if self._file_to_ts_count[path] > 0
+        )
 
-    def get_by_parameter(self, param_name: str) -> List[TimeSeries]:
+    def get_by_parameter(self, param_name: str) -> list[TimeSeries]:
         '''Returns list of all TimeSeries refering to given measurand'''
         results = []
         for path, meta in self._files_metadata.items():
@@ -90,7 +94,7 @@ class Measurements:
                 results.extend(self._get_ts(path))
         return results
 
-    def get_by_station(self, station_code: str) -> List[TimeSeries]:
+    def get_by_station(self, station_code: str) -> list[TimeSeries]:
         '''Returns list of all TimeSeries measured by a station with given code'''
         self._build_station_registry()
         results = []
@@ -115,7 +119,7 @@ class Measurements:
                 msg_list = []
                 for validator in validators:
     
-                    if msg:= validator.analyze(ts):
+                    if msg := validator.analyze(ts):
                         msg_list.extend(msg)
 
                 if msg_list:
@@ -152,7 +156,7 @@ if __name__ == "__main__":
     series_validators = [ZeroSpikeDetector(), OutlierDetector(5.), ThresholdDetector(90.)]
     n = 3
     m = 5
-    ts_to_anomalies = ms.detect_all_anomalies(series_validators, True)
+    ts_to_anomalies = ms.detect_all_anomalies(series_validators, False)
     
     print(f'First {n} detected anomalies for {m} TimeSeries:')
     for ts, anomalies in ts_to_anomalies.items():

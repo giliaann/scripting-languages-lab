@@ -2,6 +2,7 @@ from TimeSeries import TimeSeries
 from SeriesValidator import *
 from Measurements import Measurements
 from pathlib import Path
+from pprint import pprint
 
 class SimpleReporter:
     
@@ -19,4 +20,4 @@ if __name__ == "__main__":
 
     series_validators = [ZeroSpikeDetector(), OutlierDetector(5.), ThresholdDetector(90.), SimpleReporter()]
 
-    print([validator.analyze(ts) for validator in series_validators])
+    pprint([validator.analyze(ts) for validator in series_validators])
