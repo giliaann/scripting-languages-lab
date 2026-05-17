@@ -65,8 +65,8 @@ def parse_measurement_file(file_path: str | Path) -> list[TimeSeries]:
                 station_code=station_codes[i],
                 averaging_time=averaging_times[i].strip(),
                 dates=dates,
-                values=np.array(all_values[i], dtype=object),
-                unit=units[i].strip()
+                values=np.array(all_values[i], dtype=float),
+                unit_in=units[i].strip()
             )
             results.append(ts)
             

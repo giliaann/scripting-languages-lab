@@ -11,7 +11,7 @@ class TimeSeries:
     averaging_time: str
     dates: list[datetime]
     values: npt.NDAarray[float | None]
-    unit: str
+    unit_in: str
 
     def __post_init__(self):
         if not isinstance(self.dates, np.ndarray):
@@ -65,3 +65,25 @@ class TimeSeries:
     def stddev(self) -> float | None:
         data = self.__numeric_values()
         return float(np.std(data)) if data.size != 0 else None
+    
+    @property
+    def unit(self) -> str | None:
+        return self.unit_in
+    
+    @unit.setter
+    def unit(self, new_unit):
+        
+        if self.unit == 'ng/m3' and new_unit == 'ug/m3':
+            self.unit_in = new_unit
+            self.values *= 1000.0
+        
+        elif self.unit == 'ug/m3' and new_unit == 'ng/m3':
+            self.unit_in = new_unit
+            self.values /= 1000.0
+        
+        elif new_unit != 'ug/m3' and new_unit != 'ng/m3':
+            raise ValueError(f'unit: {new_unit} is not supproted')
+        
+        return
+
+
