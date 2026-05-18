@@ -1,4 +1,4 @@
-
+import functools
 
 def make_generator(f):
     x = 0
@@ -40,14 +40,13 @@ def test_generator(f, limit = 5):
     for _ in range(limit):
         print(next(gen))
 
-
+#@functools.lru_cache(maxsize=None)
 def fibonacci_nth(n):
-    a, b = 0, 1
-    for _ in range(n):
-        a, b = b, a+b
-    return a
+    if n == 0 or n == 1:
+        return n
+    return fibonacci_nth(n-1) + fibonacci_nth(n-2)
 
-
+#@functools.lru_cache(maxsize=None)
 def catalan_nth(n):
     if n == 0:
         return 1
