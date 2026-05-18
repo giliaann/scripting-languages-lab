@@ -12,7 +12,7 @@ def log(level=logging.INFO):
             orig_init = obj.__init__
             @wraps(orig_init)
             def new_init(self, *args, **kwargs):
-                logging.log(actual_level, f"Instantiating the class: {obj.__name__}")
+                logging.log(level, f"Instantiating the class: {obj.__name__}")
                 orig_init(self, *args, **kwargs)
             obj.__init__ = new_init
             return obj
@@ -25,27 +25,21 @@ def log(level=logging.INFO):
                 end_time = time.perf_counter()
                 duration = end_time - start_time
                 logging.log(
-                    actual_level,
+                    level,
                     f"Time: {call_time_str} | Duration: {duration:.6f}s | Function: {obj.__name__} | Args: {args} | Kwargs: {kwargs} | Result: {result}"
                 )
                 return result
             return wrapper
-        
-    if callable(level) or isinstance(level, type):
-        actual_level = logging.INFO
-        return decorator(level)
-
-    actual_level = level
     return decorator
     
 
 
 if __name__ ==    '__main__':
-    @log(level=logging.DEBUG)
+    @log(level=logging.INFO)
     def add(a, b):
         return a+b
     
-    @log
+    @log()
     class Dog():
         def __init__(self, name):
             self.name = name
