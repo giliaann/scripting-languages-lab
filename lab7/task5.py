@@ -29,7 +29,11 @@ if __name__ == '__main__':
     for _ in range(38):
         print(next(gen_mem))
     
-    gen = make_generator(fibonacci_nth)
+    gen = make_generator(fibonacci_nth).__iter__()
+    for _ in range(38):
+        print(next(gen))
+
+    gen = make_generator(fibonacci_nth).__iter__()
     for _ in range(38):
         print(next(gen))
 
