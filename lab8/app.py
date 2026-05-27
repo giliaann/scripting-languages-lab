@@ -4,7 +4,8 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QPushButton,
                                QLineEdit, QListWidget, QMessageBox)
 from PySide6.QtCore import Qt
 
-from LogManager import LogManager
+# Ważne: importujemy nasze nowe wyjątki z LogManager
+from LogManager import LogManager, InvalidDateFormatError, InvalidDateRangeError
 from pathlib import Path
 
 
@@ -32,47 +33,44 @@ class LogListPanel(QWidget):
 
         from_date_layout = QHBoxLayout()
         self.from_label = QLabel('From')
-        self.from_date_text = QLineEdit('2019-01-22')
+        self.from_date_text = QLineEdit('YYYY-MM-DD')
         from_date_layout.addWidget(self.from_label)
         from_date_layout.addWidget(self.from_date_text)
         filter_date_layout.addLayout(from_date_layout)
 
         to_date_layout = QHBoxLayout()
         self.to_label = QLabel('To')
-        self.to_date_text = QLineEdit('2019-01-22')
+        self.to_date_text = QLineEdit('YYYY-MM-DD')
         to_date_layout.addWidget(self.to_label)
         to_date_layout.addWidget(self.to_date_text)
         filter_date_layout.addLayout(to_date_layout)
 
+        self.filter_btn = QPushButton('Apply filter')
+        self.filter_btn.setCheckable(True)
+        filter_date_layout.addWidget(self.filter_btn)
+        
         layout.addLayout(filter_date_layout)
 
         # Log List
         self.log_list = QListWidget()
         self.log_list.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.log_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # USUNIĘTO stąd sztuczne generowanie 20 logów, żeby lista na start była czysta
         layout.addWidget(self.log_list)
 
         # page change buttons
-        # page change buttons (wewnątrz __init__ klasy LogListPanel)
         page_btn_layout = QHBoxLayout()
         self.prev_page_btn = QPushButton('Previous page')
         self.next_page_btn = QPushButton('Next page')
         
-        # Nowe elementy do skakania do konkretnej strony
-        self.page_input = QLineEdit()
-        self.page_input.setFixedWidth(40)  # Szerokość na max 3-4 cyfry
-        self.page_input.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        self.total_pages_label = QLabel('/ 0')
+        # Etykieta wyświetlająca aktualny numer strony
+        self.page_label = QLabel('Page: -')
+        self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Układamy elementy w paski w odpowiedniej kolejności:
+        # Układ
         page_btn_layout.addWidget(self.prev_page_btn)
         page_btn_layout.addStretch()
         
-        # Środkowy panel w stylu przeglądarki
-        page_btn_layout.addWidget(self.page_input)
-        page_btn_layout.addWidget(self.total_pages_label)
+        page_btn_layout.addWidget(self.page_label)
         
         page_btn_layout.addStretch()
         page_btn_layout.addWidget(self.next_page_btn)
@@ -85,26 +83,30 @@ class LogDetailPanel(QWidget):
         super().__init__()
         layout = QGridLayout(self)
 
-        # Row 0: remote host
+# Row 0
         layout.addWidget(QLabel('Remote host'), 0, 0)
         self.val_remote_host = QLineEdit('-')
-        layout.addWidget(self.val_remote_host, 0, 1)
+        self.val_remote_host.setReadOnly(True)  # <--- Zablokowane
+        layout.addWidget(self.val_remote_host, 0, 1, 1, 3)
 
-        # Row 1: date
+        # Row 1
         layout.addWidget(QLabel('Date'), 1, 0)
         self.val_date = QLineEdit('-')
+        self.val_date.setReadOnly(True)         # <--- Zablokowane
         layout.addWidget(self.val_date, 1, 1, 1, 3) 
 
-        # Row 2: time / timezone
+        # Row 2
         layout.addWidget(QLabel('Time'), 2, 0)
         self.val_time = QLineEdit('-')
+        self.val_time.setReadOnly(True)         # <--- Zablokowane
         layout.addWidget(self.val_time, 2, 1)
         
         layout.addWidget(QLabel('Timezone:'), 2, 2)
         self.val_timezone = QLineEdit('-')
+        self.val_timezone.setReadOnly(True)     # <--- Zablokowane
         layout.addWidget(self.val_timezone, 2, 3)
 
-        # Row 3: status code / method
+        # Row 3 (Status i Method to QLabele, więc ich nie trzeba blokować)
         layout.addWidget(QLabel('Status code:'), 3, 0)
         self.val_status = QLabel('-')
         layout.addWidget(self.val_status, 3, 1)
@@ -113,12 +115,13 @@ class LogDetailPanel(QWidget):
         self.val_method = QLabel('-')
         layout.addWidget(self.val_method, 3, 3)
 
-        # Row 4: resource
+        # Row 4
         layout.addWidget(QLabel('Resource:'), 4, 0)
         self.val_resource = QLineEdit('-')
+        self.val_resource.setReadOnly(True)     # <--- Zablokowane
         layout.addWidget(self.val_resource, 4, 1, 1, 3)
 
-        # Row 5: size
+        # Row 5 (Size to QLabel, nie trzeba blokować)
         layout.addWidget(QLabel('Size:'), 5, 0)
         self.val_size = QLabel('- Bytes')
         layout.addWidget(self.val_size, 5, 1, 1, 3)
@@ -162,31 +165,39 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(middle_layout)
         main_layout.addWidget(self.bottom_bar)
 
-        # funkcjonalnosci
+        # Funkcjonalności
         self.log_manager = LogManager(page_size=1000)
 
         self.top_bar.open_btn.clicked.connect(self.load_file_clicked)
         self.log_list_panel.log_list.currentRowChanged.connect(self.log_selection_changed)
+        
         self.bottom_bar.next_btn.clicked.connect(self.next_log)
         self.bottom_bar.previous_btn.clicked.connect(self.previous_log)
+        
         self.log_list_panel.next_page_btn.clicked.connect(self.next_page)
         self.log_list_panel.prev_page_btn.clicked.connect(self.previous_page)
+        
+        self.log_list_panel.filter_btn.clicked.connect(self.apply_remove_filter)
 
-        # Wygaszenie wszystkich przycisków nawigacyjnych na starcie
+        # Wygaszenie przycisków na starcie
         self.update_log_nav_btn()
         self.update_page_nav_btn()
 
-        # (wewnątrz __init__ klasy MainWindow obok innych connectów)
-        self.log_list_panel.page_input.returnPressed.connect(self.jump_to_page)
+    def _update_list_and_ui(self, raw_lines: list[str]):
+        """Pomocnicza metoda wrzucająca podaną listę stringów do UI i odświeżająca przyciski."""
+        self.log_list_panel.log_list.clear()
         
-        # Na start pole wpisywania też jest wyłączone
-        self.log_list_panel.page_input.setEnabled(False)
-
+        if raw_lines:
+            self.log_list_panel.log_list.addItems(raw_lines)
+            self.log_list_panel.log_list.setCurrentRow(0)
+            
+        self.update_log_nav_btn()
+        self.update_page_nav_btn()
 
     def load_file_clicked(self):
         path_str = self.top_bar.path_input.text().strip()
         if not path_str:
-            QMessageBox.warning(self, 'No given sciezka', 'Enter path to the HTTP log file before clicking open')
+            QMessageBox.warning(self, 'Brak ścieżki', 'Podaj ścieżkę do pliku logów przed kliknięciem Open.')
             return
         
         path = Path(path_str)
@@ -194,41 +205,60 @@ class MainWindow(QMainWindow):
         try:
             raw_lines = self.log_manager.load_file(path)
             if not raw_lines:
-                QMessageBox.information(self, 'Empty file', 'Choosen file has no logs')
-                self.log_list_panel.log_list.clear()
-                self.update_log_nav_btn()
-                self.update_page_nav_btn()
-                return
+                QMessageBox.information(self, 'Pusty plik', 'Wybrany plik nie zawiera logów lub jest pusty.')
             
-            self.log_list_panel.log_list.clear()
-            self.log_list_panel.log_list.addItems(raw_lines)
-            
-            # POPRAWKA: sprawdzenie długości listy za pomocą len()
-            if len(raw_lines) > 0:
-                self.log_list_panel.log_list.setCurrentRow(0)
-            
-            self.update_page_nav_btn()
+            self._update_list_and_ui(raw_lines)
 
         except FileNotFoundError:
-            QMessageBox.critical(self, 'Error: File not found', f'File of path: {path} does not exist')
+            QMessageBox.critical(self, 'Błąd: Nie znaleziono', f'Plik o ścieżce: {path} nie istnieje.')
         except PermissionError:
-            QMessageBox.critical(self, 'Error: NO permission to open file', f'You do not have permission to open file {path}')
+            QMessageBox.critical(self, 'Błąd: Brak uprawnień', f'Nie masz uprawnień, aby otworzyć plik {path}.')
         except IsADirectoryError:
-            QMessageBox.critical(self, 'Error: Path is a directory', f'Given path: {path} is a directory, not a file')
+            QMessageBox.critical(self, 'Błąd: Ścieżka to katalog', f'Podana ścieżka: {path} jest katalogiem, a nie plikiem.')
         except Exception as e:
-            QMessageBox.critical(self, 'Critical error', f'Unexpected error while loading file from: {path}\n{str(e)}')
+            QMessageBox.critical(self, 'Błąd krytyczny', f'Nieoczekiwany błąd podczas ładowania pliku:\n{str(e)}')
 
+    def apply_remove_filter(self, checked):
+            if checked:
+                # 1. Od razu blokujemy pola, gdy włączamy filtr
+                self.log_list_panel.from_date_text.setReadOnly(True)
+                self.log_list_panel.to_date_text.setReadOnly(True)
+                
+                start_str = self.log_list_panel.from_date_text.text().strip()
+                end_str = self.log_list_panel.to_date_text.text().strip()
+                
+                try:
+                    raw_lines = self.log_manager.set_dates_from_strings(start_str, end_str)
+                    self.log_list_panel.filter_btn.setText('Remove filter')
+                    self._update_list_and_ui(raw_lines)
+                except (InvalidDateFormatError, InvalidDateRangeError, Exception) as e:
+                    # 2. Jeśli coś pójdzie nie tak (zła data), odznaczamy przycisk i ODBLOKOWUJEMY pola
+                    self.log_list_panel.filter_btn.setChecked(False)
+                    self.log_list_panel.from_date_text.setReadOnly(False)
+                    self.log_list_panel.to_date_text.setReadOnly(False)
+                    
+                    if isinstance(e, InvalidDateFormatError):
+                        QMessageBox.critical(self, "Błąd formatu", str(e))
+                    elif isinstance(e, InvalidDateRangeError):
+                        QMessageBox.critical(self, "Błąd zakresu dat", str(e))
+                    else:
+                        QMessageBox.critical(self, "Nieoczekiwany błąd", str(e))
+            else:
+                # 3. Kiedy wyłączamy filtr, ODBLOKOWUJEMY pola do ponownej edycji
+                self.log_list_panel.from_date_text.setReadOnly(False)
+                self.log_list_panel.to_date_text.setReadOnly(False)
+                
+                raw_lines = self.log_manager.delete_dates()
+                self.log_list_panel.filter_btn.setText('Apply filter')
+                self._update_list_and_ui(raw_lines)
 
     def log_selection_changed(self, index: int):
-        # KROK 1: Zabezpieczenie przed indeksem -1 (czyszczenie listy)
         if index < 0:
+            self.clear_log_details()
             self.update_log_nav_btn()
             return
 
-        # KROK 2: Aktualizacja stanu dolnych przycisków na podstawie nowej pozycji
         self.update_log_nav_btn()
-        
-        # KROK 3: Pobranie sparsowanego logu z managera i wyświetlenie go w GUI
         parsed_log = self.log_manager.get_parsed_log_at(index)
 
         if parsed_log:
@@ -241,119 +271,61 @@ class MainWindow(QMainWindow):
             self.log_detail_panel.val_resource.setText(getattr(parsed_log, 'resource', 'N/A'))
             self.log_detail_panel.val_size.setText(f"{getattr(parsed_log, 'size', '0')} Bytes")
 
-
-    def load_page(self, page_num: int):
-        """Pomocnicza metoda ładująca określoną stronę do listy i odświeżająca GUI."""
-        raw_lines = self.log_manager.load_page(page_num)
-        
-        self.log_list_panel.log_list.clear()
-        self.log_list_panel.log_list.addItems(raw_lines)
-        
-        if len(raw_lines) > 0:
-            self.log_list_panel.log_list.setCurrentRow(0)
-            
-        self.update_page_nav_btn()
-
-
     def next_log(self):
         current_row = self.log_list_panel.log_list.currentRow()
         if current_row < self.log_list_panel.log_list.count() - 1:
             self.log_list_panel.log_list.setCurrentRow(current_row + 1)
-
 
     def previous_log(self):
         current_row = self.log_list_panel.log_list.currentRow()
         if current_row > 0:
             self.log_list_panel.log_list.setCurrentRow(current_row - 1)
 
-
     def next_page(self):
-        """Pobiera z managera kolejną stronę danych (o ile istnieje)."""
-        curr = self.log_manager.current_page
-        # Zakładam, że pole w LogManagerze nazywa się total_pages lub pages_count (dostosuj jeśli trzeba)
-        total = self.log_manager.pages_count 
-        
-        if curr < total - 1:
-            self.load_page(curr + 1)
-
+        raw_lines = self.log_manager.load_next_page()
+        self._update_list_and_ui(raw_lines)
 
     def previous_page(self):
-        """Pobiera z managera poprzednią stronę danych (o ile istnieje)."""
-        curr = self.log_manager.current_page
-        if curr > 0:
-            self.load_page(curr - 1)
-
+        raw_lines = self.log_manager.load_prev_page()
+        self._update_list_and_ui(raw_lines)
 
     def update_log_nav_btn(self):
-        """Zarządza dolnymi przyciskami (skakanie po linijkach)."""
         curr = self.log_list_panel.log_list.currentRow()
         total = self.log_list_panel.log_list.count()
         self.bottom_bar.previous_btn.setEnabled(curr > 0)
         self.bottom_bar.next_btn.setEnabled(curr < total - 1 and total > 0)
 
-
     def update_page_nav_btn(self):
-        """Zarządza przyciskami pod listą (skakanie po stronach)."""
-        curr = self.log_manager.current_page
-        total = self.log_manager.pages_count
-        self.log_list_panel.prev_page_btn.setEnabled(curr > 0)
-        self.log_list_panel.next_page_btn.setEnabled(curr < total - 1 and total > 0)
-        
-        # Dodatkowo aktualizujemy tytuł okna informacją o stronie
-        if total > 0:
-            self.setWindowTitle(f'Shrek log browser - Page {curr + 1} of {total}')
-        else:
-            self.setWindowTitle('Shrek log browser - No file loaded')
-
-    def jump_to_page(self):
-        """Wywoływane, gdy użytkownik wpisze numer strony i wciśnie Enter."""
-        text = self.log_list_panel.page_input.text().strip()
-        total = self.log_manager.pages_count
-
-        if not text or total == 0:
-            return
-
-        try:
-            # Użytkownik myśli w kategoriach stron od 1, indeksujemy od 0
-            target_page = int(text) - 1
+            curr = self.log_manager.current_page
             
-            if 0 <= target_page < total:
-                self.load_page(target_page)
+            lines_count = len(self.log_manager.get_current_page_lines())
+            has_logs = lines_count > 0
+            
+            # Zakładamy, że jeśli strona nie jest "pełna", to jest to ostatnia strona
+            is_full_page = lines_count == self.log_manager.page_size
+            
+            self.log_list_panel.prev_page_btn.setEnabled(curr > 0)
+            self.log_list_panel.next_page_btn.setEnabled(is_full_page)
+            
+            if has_logs:
+                self.log_list_panel.page_label.setText(f"Page: {curr + 1}")
+                self.setWindowTitle(f'Shrek log browser - Page {curr + 1}')
             else:
-                QMessageBox.warning(
-                    self, 
-                    "Niepoprawny numer", 
-                    f"Wpisz numer strony w przedziale od 1 do {total}."
-                )
-                # Resetujemy tekst pola do aktualnej poprawnej strony
-                self.log_list_panel.page_input.setText(str(self.log_manager.current_page + 1))
-                
-        except ValueError:
-            QMessageBox.warning(self, "Błąd", "Wprowadzona wartość musi być liczbą całkowitą.")
-            self.log_list_panel.page_input.setText(str(self.log_manager.current_page + 1))
-
-
-    def update_page_nav_btn(self):
-        """Zarządza przyciskami pod listą oraz polem skoku do strony."""
-        curr = self.log_manager.current_page
-        total = self.log_manager.pages_count
-        
-        # Włączamy lub wyłączamy pole tekstowe w zależności od tego, czy plik jest załadowany
-        has_pages = total > 0
-        self.log_list_panel.page_input.setEnabled(has_pages)
-
-        self.log_list_panel.prev_page_btn.setEnabled(curr > 0)
-        self.log_list_panel.next_page_btn.setEnabled(curr < total - 1 and has_pages)
-        
-        # Aktualizacja wartości w stylu przeglądarki (np. "5" / "24")
-        if has_pages:
-            self.log_list_panel.page_input.setText(str(curr + 1))
-            self.log_list_panel.total_pages_label.setText(f"/ {total}")
-            self.setWindowTitle(f'Shrek log browser - Page {curr + 1} of {total}')
-        else:
-            self.log_list_panel.page_input.clear()
-            self.log_list_panel.total_pages_label.setText("/ 0")
-            self.setWindowTitle('Shrek log browser - No file loaded')
+                # ZMIANA: Zamiast ukrywać numer strony, pokazujemy, że to strona nr 1, 
+                # ale informujemy, że nie ma logów do wyświetlenia.
+                self.log_list_panel.page_label.setText("Page: -")
+                self.setWindowTitle('Shrek log browser - No logs found')
+    
+    def clear_log_details(self):
+        """Czyści prawy panel ze szczegółami logu."""
+        self.log_detail_panel.val_remote_host.setText('-')
+        self.log_detail_panel.val_date.setText('-')
+        self.log_detail_panel.val_time.setText('-')
+        self.log_detail_panel.val_timezone.setText('-')
+        self.log_detail_panel.val_status.setText('-')
+        self.log_detail_panel.val_method.setText('-')
+        self.log_detail_panel.val_resource.setText('-')
+        self.log_detail_panel.val_size.setText('- Bytes')
 
 
 if __name__ == "__main__":
