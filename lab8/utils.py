@@ -1,18 +1,15 @@
 import re
 from dataclasses import dataclass
 from datetime import datetime
-from pathlib import Path
-import itertools
 
 @dataclass(slots=True)
 class HTTPLog:
-    ip: str
+    remote_host: str  # ZMIANA: Zmień z 'ip' na 'remote_host', aby pasowało do GUI
     datetime: datetime
     method: str
     resource: str
     status: str
     size: str
-
 
     def __post_init__(self):
         if isinstance(self.datetime, str):
@@ -26,24 +23,21 @@ class HTTPLog:
     def time_only(self) -> str:
         return self.datetime.strftime('%H:%M:%S')
     
-
     @property
     def timezone(self) -> str:
         return self.datetime.strftime('%z')
-    
 
 
 LOG_PATTERN = re.compile(
-    r'(?P<ip>\S+) '                     # IP: ciąg znaków bez spacji
-    r'\S+ \S+ '                         # Ignorujemy tożsamość i user-id (zazwyczaj "- -")
-    r'\[(?P<datetime>[^\]]+)\] '        # Data i czas: wszystko wewnątrz nawiasów kwadratowych
-    r'"(?P<method>[A-Z]+) '             # Metoda: wielkie litery na początku cudzysłowu (np. GET)
-    r'(?P<resource>\S+) '               # Zasób (URL): ciąg znaków do spacji
-    r'\S+" '                            # Ignorujemy wersję protokołu (np. HTTP/1.1)
-    r'(?P<status>\d{3}) '               # Status kod: dokładnie 3 cyfry
-    r'(?P<size>\d+|-)'                  # Rozmiar bajtów: cyfry lub myślnik (gdy brak)
+    r'(?P<remote_host>\S+) '           # ZMIANA: Grupa nazywa się teraz <remote_host>
+    r'\S+ \S+ '                         # Ignorujemy tożsamość i user-id
+    r'\[(?P<datetime>[^\]]+)\] '        # Data i czas
+    r'"(?P<method>[A-Z]+) '             # Metoda
+    r'(?P<resource>\S+) '               # Zasób (URL)
+    r'\S+" '                            # Ignorujemy wersję protokołu
+    r'(?P<status>\d{3}) '               # Status kod
+    r'(?P<size>\d+|-)'                  # Rozmiar bajtów
 )
-
 
 
 def parse_http_log(line: str) -> HTTPLog:
@@ -52,6 +46,6 @@ def parse_http_log(line: str) -> HTTPLog:
         return None
     
     parsed_data = match.groupdict()
+    # Teraz parsed_data zawiera klucz 'remote_host', który idealnie wstrzykuje się do HTTPLog
     log_entry = HTTPLog(**parsed_data)
     return log_entry
-
