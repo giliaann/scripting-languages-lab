@@ -1,19 +1,36 @@
-import sqlite3
-import pandas as pd
-import re
 from pathlib import Path
+from dataclasses import dataclass
+from datetime import datetime
+import re
+
+from utils import HTTPLog, parse_http_log
 
 
-class LogDataManager:
-    def __init__(self, db_path: Path):
-        self.db_path = db_path
-        self.conn = sqlite3.connect(self.db_path)
-        self.current_filtered_ids = []
-        self.current_index = -1
+class LogManager:
+    def __init__(self):
+        self._raw_lines = list[str] = []
+        self.current_file_path: Path | None = None
 
+    
+    def load_file(self, file_path: Path) -> list[str]:
+        self.current_file_path = file_path
+        self._raw_lines = []
 
-    def load_file(self, file_path: Path):
-        self.conn.execute("DROP TABLE IF EXISTS Logs")
-        self.conn.execute("""
+        with open(file_path, 'r', encoding='utf-8', errors='replace') as f:
+            for line in f:
+                cleaned = line.strip()
+                if cleaned:
+                    self._raw_lines.append(cleaned)
 
-        """)
+        return self._raw_lines
+    
+
+    def get_parsed_log_at(self, index: int) -> HTTPLog | None:
+        if 0 <= index <= len(self._raw_lines):
+            raw_line = self._raw_lines[index]
+            return parse_http_log(raw_line)
+        return None
+    
+
+    def total_count(self) -> int:
+        return len(self._raw_lines)
