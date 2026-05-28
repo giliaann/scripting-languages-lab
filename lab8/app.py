@@ -4,7 +4,6 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QPushButton,
                                QLineEdit, QListWidget, QMessageBox)
 from PySide6.QtCore import Qt
 
-# Ważne: importujemy nasze nowe wyjątki z LogManager
 from LogManager import LogManager, InvalidDateFormatError, InvalidDateRangeError
 from pathlib import Path
 
@@ -57,16 +56,16 @@ class LogListPanel(QWidget):
         self.log_list.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         layout.addWidget(self.log_list)
 
-        # page change buttons
+        # Page change buttons
         page_btn_layout = QHBoxLayout()
         self.prev_page_btn = QPushButton('Previous page')
         self.next_page_btn = QPushButton('Next page')
         
-        # Etykieta wyświetlająca aktualny numer strony
+        # Current page number label
         self.page_label = QLabel('Page: -')
         self.page_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        # Układ
+        # Layout
         page_btn_layout.addWidget(self.prev_page_btn)
         page_btn_layout.addStretch()
         
@@ -83,30 +82,30 @@ class LogDetailPanel(QWidget):
         super().__init__()
         layout = QGridLayout(self)
 
-# Row 0
+        # Row 0
         layout.addWidget(QLabel('Remote host'), 0, 0)
         self.val_remote_host = QLineEdit('-')
-        self.val_remote_host.setReadOnly(True)  # <--- Zablokowane
+        self.val_remote_host.setReadOnly(True)
         layout.addWidget(self.val_remote_host, 0, 1, 1, 3)
 
         # Row 1
         layout.addWidget(QLabel('Date'), 1, 0)
         self.val_date = QLineEdit('-')
-        self.val_date.setReadOnly(True)         # <--- Zablokowane
+        self.val_date.setReadOnly(True)
         layout.addWidget(self.val_date, 1, 1, 1, 3) 
 
         # Row 2
         layout.addWidget(QLabel('Time'), 2, 0)
         self.val_time = QLineEdit('-')
-        self.val_time.setReadOnly(True)         # <--- Zablokowane
+        self.val_time.setReadOnly(True)
         layout.addWidget(self.val_time, 2, 1)
         
         layout.addWidget(QLabel('Timezone:'), 2, 2)
         self.val_timezone = QLineEdit('-')
-        self.val_timezone.setReadOnly(True)     # <--- Zablokowane
+        self.val_timezone.setReadOnly(True)
         layout.addWidget(self.val_timezone, 2, 3)
 
-        # Row 3 (Status i Method to QLabele, więc ich nie trzeba blokować)
+        # Row 3
         layout.addWidget(QLabel('Status code:'), 3, 0)
         self.val_status = QLabel('-')
         layout.addWidget(self.val_status, 3, 1)
@@ -118,10 +117,10 @@ class LogDetailPanel(QWidget):
         # Row 4
         layout.addWidget(QLabel('Resource:'), 4, 0)
         self.val_resource = QLineEdit('-')
-        self.val_resource.setReadOnly(True)     # <--- Zablokowane
+        self.val_resource.setReadOnly(True)
         layout.addWidget(self.val_resource, 4, 1, 1, 3)
 
-        # Row 5 (Size to QLabel, nie trzeba blokować)
+        # Row 5
         layout.addWidget(QLabel('Size:'), 5, 0)
         self.val_size = QLabel('- Bytes')
         layout.addWidget(self.val_size, 5, 1, 1, 3)
@@ -165,7 +164,7 @@ class MainWindow(QMainWindow):
         main_layout.addLayout(middle_layout)
         main_layout.addWidget(self.bottom_bar)
 
-        # Funkcjonalności
+        # Functionalities
         self.log_manager = LogManager(page_size=1000)
 
         self.top_bar.open_btn.clicked.connect(self.load_file_clicked)
@@ -179,12 +178,12 @@ class MainWindow(QMainWindow):
         
         self.log_list_panel.filter_btn.clicked.connect(self.apply_remove_filter)
 
-        # Wygaszenie przycisków na starcie
+        # Disable buttons on startup
         self.update_log_nav_btn()
         self.update_page_nav_btn()
 
     def _update_list_and_ui(self, raw_lines: list[str]):
-        """Pomocnicza metoda wrzucająca podaną listę stringów do UI i odświeżająca przyciski."""
+        """Helper method to populate the UI with a given list of strings and refresh buttons."""
         self.log_list_panel.log_list.clear()
         
         if raw_lines:
@@ -197,7 +196,7 @@ class MainWindow(QMainWindow):
     def load_file_clicked(self):
         path_str = self.top_bar.path_input.text().strip()
         if not path_str:
-            QMessageBox.warning(self, 'Brak ścieżki', 'Podaj ścieżkę do pliku logów przed kliknięciem Open.')
+            QMessageBox.warning(self, 'Missing path', 'Please provide a path to the log file before clicking Open.')
             return
         
         path = Path(path_str)
@@ -205,22 +204,21 @@ class MainWindow(QMainWindow):
         try:
             raw_lines = self.log_manager.load_file(path)
             if not raw_lines:
-                QMessageBox.information(self, 'Pusty plik', 'Wybrany plik nie zawiera logów lub jest pusty.')
+                QMessageBox.information(self, 'Empty file', 'The selected file does not contain logs or is empty.')
             
             self._update_list_and_ui(raw_lines)
 
         except FileNotFoundError:
-            QMessageBox.critical(self, 'Błąd: Nie znaleziono', f'Plik o ścieżce: {path} nie istnieje.')
+            QMessageBox.critical(self, 'Error: Not found', f'File path: {path} does not exist.')
         except PermissionError:
-            QMessageBox.critical(self, 'Błąd: Brak uprawnień', f'Nie masz uprawnień, aby otworzyć plik {path}.')
+            QMessageBox.critical(self, 'Error: Permission denied', f'You do not have permission to open file {path}.')
         except IsADirectoryError:
-            QMessageBox.critical(self, 'Błąd: Ścieżka to katalog', f'Podana ścieżka: {path} jest katalogiem, a nie plikiem.')
+            QMessageBox.critical(self, 'Error: Path is a directory', f'The provided path: {path} is a directory, not a file.')
         except Exception as e:
-            QMessageBox.critical(self, 'Błąd krytyczny', f'Nieoczekiwany błąd podczas ładowania pliku:\n{str(e)}')
+            QMessageBox.critical(self, 'Critical error', f'Unexpected error while loading the file:\n{str(e)}')
 
     def apply_remove_filter(self, checked):
             if checked:
-                # 1. Od razu blokujemy pola, gdy włączamy filtr
                 self.log_list_panel.from_date_text.setReadOnly(True)
                 self.log_list_panel.to_date_text.setReadOnly(True)
                 
@@ -232,19 +230,17 @@ class MainWindow(QMainWindow):
                     self.log_list_panel.filter_btn.setText('Remove filter')
                     self._update_list_and_ui(raw_lines)
                 except (InvalidDateFormatError, InvalidDateRangeError, Exception) as e:
-                    # 2. Jeśli coś pójdzie nie tak (zła data), odznaczamy przycisk i ODBLOKOWUJEMY pola
                     self.log_list_panel.filter_btn.setChecked(False)
                     self.log_list_panel.from_date_text.setReadOnly(False)
                     self.log_list_panel.to_date_text.setReadOnly(False)
                     
                     if isinstance(e, InvalidDateFormatError):
-                        QMessageBox.critical(self, "Błąd formatu", str(e))
+                        QMessageBox.critical(self, "Format error", str(e))
                     elif isinstance(e, InvalidDateRangeError):
-                        QMessageBox.critical(self, "Błąd zakresu dat", str(e))
+                        QMessageBox.critical(self, "Date range error", str(e))
                     else:
-                        QMessageBox.critical(self, "Nieoczekiwany błąd", str(e))
+                        QMessageBox.critical(self, "Unexpected error", str(e))
             else:
-                # 3. Kiedy wyłączamy filtr, ODBLOKOWUJEMY pola do ponownej edycji
                 self.log_list_panel.from_date_text.setReadOnly(False)
                 self.log_list_panel.to_date_text.setReadOnly(False)
                 
@@ -301,7 +297,7 @@ class MainWindow(QMainWindow):
             lines_count = len(self.log_manager.get_current_page_lines())
             has_logs = lines_count > 0
             
-            # Zakładamy, że jeśli strona nie jest "pełna", to jest to ostatnia strona
+            # Assuming that if the page is not "full", it is the last page
             is_full_page = lines_count == self.log_manager.page_size
             
             self.log_list_panel.prev_page_btn.setEnabled(curr > 0)
@@ -311,13 +307,11 @@ class MainWindow(QMainWindow):
                 self.log_list_panel.page_label.setText(f"Page: {curr + 1}")
                 self.setWindowTitle(f'Shrek log browser - Page {curr + 1}')
             else:
-                # ZMIANA: Zamiast ukrywać numer strony, pokazujemy, że to strona nr 1, 
-                # ale informujemy, że nie ma logów do wyświetlenia.
                 self.log_list_panel.page_label.setText("Page: -")
                 self.setWindowTitle('Shrek log browser - No logs found')
     
     def clear_log_details(self):
-        """Czyści prawy panel ze szczegółami logu."""
+        """Clears the right panel with log details."""
         self.log_detail_panel.val_remote_host.setText('-')
         self.log_detail_panel.val_date.setText('-')
         self.log_detail_panel.val_time.setText('-')
