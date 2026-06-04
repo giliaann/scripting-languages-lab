@@ -1,10 +1,10 @@
 import sys
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QPushButton, 
                                QLabel, QVBoxLayout, QHBoxLayout, QGridLayout, 
-                               QLineEdit, QListWidget, QMessageBox)
+                               QLineEdit, QListWidget, QMessageBox, QComboBox)
 from PySide6.QtCore import Qt
 
-from LogManager import LogManager, InvalidDateFormatError, InvalidDateRangeError
+from LogManager import LogManager, InvalidDateFormatError, InvalidDateRangeError, HTTP_METHODS
 from pathlib import Path
 
 
@@ -47,8 +47,20 @@ class LogListPanel(QWidget):
         self.filter_btn = QPushButton('Apply filter')
         self.filter_btn.setCheckable(True)
         filter_date_layout.addWidget(self.filter_btn)
-        
         layout.addLayout(filter_date_layout)
+
+        method_layout = QHBoxLayout()
+        self.method_label = QLabel('Filter by method:')
+        self.method_combo = QComboBox()
+        method_choice_list = ['-']
+        method_choice_list.extend(HTTP_METHODS)
+        self.method_combo.addItems(method_choice_list)
+        
+        method_layout.addWidget(self.method_label)
+        method_layout.addWidget(self.method_combo)
+        method_layout.addStretch()
+        
+        layout.addLayout(method_layout)
 
         # Log List
         self.log_list = QListWidget()
@@ -178,6 +190,8 @@ class MainWindow(QMainWindow):
         
         self.log_list_panel.filter_btn.clicked.connect(self.apply_remove_filter)
 
+        self.log_list_panel.method_combo.currentTextChanged.connect(self.method_filter_changed)
+
         # Disable buttons on startup
         self.update_log_nav_btn()
         self.update_page_nav_btn()
@@ -226,9 +240,9 @@ class MainWindow(QMainWindow):
                 end_str = self.log_list_panel.to_date_text.text().strip()
                 
                 try:
-                    raw_lines = self.log_manager.set_dates_from_strings(start_str, end_str)
+                    self.log_manager.set_dates_from_strings(start_str, end_str)
                     self.log_list_panel.filter_btn.setText('Remove filter')
-                    self._update_list_and_ui(raw_lines)
+                    self._update_list_and_ui(self.log_manager.load_current_page())
                 except (InvalidDateFormatError, InvalidDateRangeError, Exception) as e:
                     self.log_list_panel.filter_btn.setChecked(False)
                     self.log_list_panel.from_date_text.setReadOnly(False)
@@ -244,9 +258,20 @@ class MainWindow(QMainWindow):
                 self.log_list_panel.from_date_text.setReadOnly(False)
                 self.log_list_panel.to_date_text.setReadOnly(False)
                 
-                raw_lines = self.log_manager.delete_dates()
+                self.log_manager.delete_dates()
                 self.log_list_panel.filter_btn.setText('Apply filter')
-                self._update_list_and_ui(raw_lines)
+                self._update_list_and_ui(self.log_manager.load_current_page())
+
+
+    def method_filter_changed(self, text: str):
+        method = None if text == '-' else text
+        
+        try:
+            self.log_manager.set_method(method)
+            self._update_list_and_ui(self.log_manager.load_current_page())
+        except Exception as e:
+            QMessageBox.critical(self, "Filter error", f"Error occured during filtering: \n{e}")
+
 
     def log_selection_changed(self, index: int):
         if index < 0:

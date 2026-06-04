@@ -2,6 +2,8 @@ from pathlib import Path
 from datetime import datetime, timezone
 from utils import HTTPLog, parse_http_log
 
+HTTP_METHODS = ['GET', 'POST', 'PUT', 'DELETE', 'HEAD', 'OPTIONS', 'PATCH']
+
 class InvalidDateFormatError(ValueError):
     """Raised when a string does not match the YYYY-MM-DD format."""
     pass
@@ -25,6 +27,9 @@ class LogManager:
         self.start_date: datetime | None = None
         self.end_date: datetime | None = None
 
+        # Method filter
+        self.method_filter: str | None = None
+
     def _reset_pagination(self) -> None:
         """Resets cursor and bookmarks (used when changing file or filters)."""
         self.current_page = 0
@@ -42,7 +47,7 @@ class LogManager:
         self.start_date = start_date
         self.end_date = end_date
         self._reset_pagination()
-        return self.load_current_page()
+        
     
     def set_dates_from_strings(self, start_date_str: str, end_date_str: str) -> list[str]:
         """Takes dates as YYYY-MM-DD strings, validates them, and sets the filter."""
@@ -59,13 +64,18 @@ class LogManager:
         end_date = end_date.replace(hour=23, minute=59, second=59, tzinfo=timezone.utc)
 
         return self.set_dates(start_date, end_date)
+    
+    def set_method(self, method: str | None) -> list[str]:
+        """Takes HTTP method, and sets the filter."""
+        self.method_filter = method
+        self._reset_pagination()
 
     def delete_dates(self) -> list[str]:
         """Removes the date filter, returning the manager to unrestricted mode."""
         self.start_date = None
         self.end_date = None
         self._reset_pagination()
-        return self.load_current_page()
+   
 
     def _fetch_page(self, start_offset: int) -> tuple[list[str], int]:
         """
@@ -101,6 +111,11 @@ class LogManager:
                     parsed_log = parse_http_log(line_str)
                     if not parsed_log or not (self.start_date <= parsed_log.datetime <= self.end_date):
                         continue
+
+                if self.method_filter:
+                    parsed_log = parse_http_log(line_str)
+                    if not parsed_log or not (self.method_filter == parsed_log.method):
+                        continue                
                         
                 lines.append(line_str)
                 
