@@ -1,6 +1,5 @@
 import functools
-import sys
-from task4 import make_generator, catalan_nth, fibonacci_nth
+from task4 import make_generator, fibonacci_nth
 import types
 
 

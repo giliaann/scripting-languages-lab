@@ -1,5 +1,5 @@
 from collections import Counter
-from lab3.log_definition import LOG_SCHEMA, get_index
+from lab3.log_definition import get_index
 
 
 def count_status_classes(logs):

@@ -1,4 +1,3 @@
-import functools
 
 def make_generator(f):
     x = 0

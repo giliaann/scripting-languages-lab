@@ -1,9 +1,8 @@
 import sys
 from PySide6.QtWidgets import (
-    QApplication, QWidget, QLabel, QGridLayout, QHBoxLayout, QVBoxLayout
+    QApplication, QWidget, QLabel, QGridLayout, QHBoxLayout
 )
 from PySide6.QtCore import Qt
-from PySide6.QtGui import QFont
 
 class LogDetailsWidget(QWidget):
     def __init__(self):

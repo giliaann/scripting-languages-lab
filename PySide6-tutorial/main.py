@@ -1,6 +1,4 @@
-from PySide6.QtWidgets import (QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout, QPushButton, QLineEdit, 
-                               QTextEdit, QSlider, QProgressBar, QComboBox, QListWidget, QRadioButton, QCheckBox,
-                               QHBoxLayout)
+from PySide6.QtWidgets import (QApplication, QMainWindow, QLabel, QWidget, QVBoxLayout, QPushButton, QListWidget, QRadioButton, QHBoxLayout)
 
 from PySide6.QtCore import Qt
 

@@ -1,6 +1,5 @@
 import csv
 import logging
-import sys
 
 '''
 Parsing measurements data files

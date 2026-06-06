@@ -6,7 +6,6 @@ from group_measurement_files_by_key import group_measurement_files_by_key
 from utils import parse_measurements_file, parse_metadata_file
 import random
 import statistics
-from dataclasses import dataclass
 from anomaly_detection import Measurement, detect_anomalies
 
 

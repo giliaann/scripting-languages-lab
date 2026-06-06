@@ -44,5 +44,5 @@ if __name__ == '__main__':
 
     try:
         next(generator)
-    except StopIteration as e:
-        print(f'Stop iterationn exception caught')
+    except StopIteration:
+        print('Stop iterationn exception caught')

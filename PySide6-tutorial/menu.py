@@ -1,5 +1,4 @@
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton, QMessageBox
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QApplication, QMainWindow
 
 
 class MainWindow(QMainWindow):

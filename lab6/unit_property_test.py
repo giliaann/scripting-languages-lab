@@ -12,9 +12,9 @@ if __name__ == "__main__":
 
     print(f'unit: {ts.unit}, value: {ts.values[0]}')
     ts.unit = 'ng/m3'
-    print(f'Set to ng/m3')
+    print('Set to ng/m3')
     print(f'unit: {ts.unit}, value: {ts.values[0]}')
     ts.unit = 'ug/m3'
-    print(f'Set to ug/m3')
+    print('Set to ug/m3')
     print(f'unit: {ts.unit}, value: {ts.values[0]}')
     

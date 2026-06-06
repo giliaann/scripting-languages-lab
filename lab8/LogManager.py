@@ -55,7 +55,7 @@ class LogManager:
             start_date = datetime.fromisoformat(start_date_str)
             end_date = datetime.fromisoformat(end_date_str)
         except ValueError:
-            raise InvalidDateFormatError(f"Failed to parse dates. Required format is YYYY-MM-DD.")
+            raise InvalidDateFormatError("Failed to parse dates. Required format is YYYY-MM-DD.")
 
         if start_date > end_date:
             raise InvalidDateRangeError("Start date cannot be later than the end date.")

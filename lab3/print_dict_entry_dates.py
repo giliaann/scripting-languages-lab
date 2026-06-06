@@ -1,4 +1,3 @@
-from lab3.log_definition import get_index
 from collections import Counter
 
 

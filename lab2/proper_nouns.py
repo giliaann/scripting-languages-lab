@@ -1,6 +1,5 @@
 from lab2.utils.get_sentence import get_sentence
 from lab2.utils.split_first_word import split_first_word
-from lab2.utils.extract_content import process_preamble, process_content
 
 
 def proper_nouns():

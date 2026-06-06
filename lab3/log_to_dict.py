@@ -1,5 +1,5 @@
 from collections import defaultdict
-from lab3.log_definition import LOG_SCHEMA, get_index
+from lab3.log_definition import get_index
 from lab3.entry_to_dict import entry_to_dict
 
 
