@@ -230,8 +230,7 @@ class TransitGUI(QMainWindow):
         self.stop_list.blockSignals(True)
         self.stop_list.clear()
         
-        # Ograniczenie wyświetlania do max 100 pozycji na raz w celu eliminacji lagów renderowania
-        for stop_id, stop_name in stops[:100]:
+        for stop_id, stop_name in stops:
             item = QListWidgetItem(self.stop_list)
             custom_widget = StopListWidgetItem(stop_id, stop_name)
             item.setSizeHint(custom_widget.sizeHint())

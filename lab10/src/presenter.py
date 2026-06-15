@@ -22,14 +22,13 @@ class TransitPresenter:
         if stop_id is None:
             self._view.clear_stats()
             return
-        
-        stop_name = next(
-            (name for sid, name in self._current_stops if sid == stop_id),
-            stop_id
-        )
 
         try:
             stats = self._service.get_stop_stats(stop_id, stop_name)
+            hour = int(stats.latest_departure[0:2])
+            if hour >= 24:
+                formatted_hour = f"{hour-24:02d}"
+                stats.latest_departure = formatted_hour + stats.latest_departure[2:] + ' next day'
             self._view.show_stats(stats)
         except Exception as e:
             self._view.show_error(str(e))
