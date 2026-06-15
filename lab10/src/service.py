@@ -8,17 +8,11 @@ class TransitService:
     def __init__(self, db: GTFSDatabase) -> None:
         self._db = db
 
-    def search_stops(self, query: str) -> list[tuple[str, str]]:
+    def search_stops(self, query: str | None) -> list[tuple[str, str]]:
         """Return stops whose name contains *query*"""
-        stops = self._db.fetch_all_stops()
         if not query:
-            return stops
-        q = query.casefold()
-        return [
-            (sid, name)
-            for sid, name in stops
-            if q in name.casefold()
-        ]
+            return self._db.fetch_all_stops()
+        return self._db.fetch_stops_query(query)
     
 
     def get_stop_stats(self, stop_id: str, stop_name: str) -> StopStats:

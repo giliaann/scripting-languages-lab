@@ -22,6 +22,19 @@ class GTFSDatabase:
         return [(str(row[0]), str(row[1])) for row in cursor.fetchall()]
     
 
+    def fetch_stops_query(self, like_reg: str) -> list[tuple[str, str]]:
+        """Returns all stops sorted alphabetically and filtered: [(stop_id, stop_name), ...]"""
+        query: str = """
+            SELECT stop_id, stop_name
+            FROM stops
+            WHERE stop_name LIKE ?
+            ORDER BY stop_name
+        """
+        cursor: sqlite3.Cursor = self._conn.cursor()
+        cursor.execute(query, (f"%{like_reg}%", ))
+        return [(str(row[0]), str(row[1])) for row in cursor.fetchall()]
+    
+
     def count_unique_lines_for_stop(self, stop_id: str) -> int:
         """Returns the number of distinct routes serving a stop."""
         query = """

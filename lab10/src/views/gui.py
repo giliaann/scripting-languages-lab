@@ -15,24 +15,53 @@ from PySide6.QtWidgets import (
     QScrollArea,
 )
 from PySide6.QtCore import Qt, QTimer, Slot
+from src.models import StopStats
 
 
-class StopListWidgetItem(QWidget):
-    """Niestandardowy wiersz listy: Nazwa + ID pod spodem w innym kolorze"""
-    def __init__(self, stop_id: str, stop_name: str, parent=None):
-        super().__init__(parent)
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(10, 8, 10, 8)
-        layout.setSpacing(4)
+
+from PySide6.QtWidgets import QStyledItemDelegate, QStyle
+from PySide6.QtGui import QPainter, QColor, QFont
+from PySide6.QtCore import Qt, QSize
+
+class StopListDelegate(QStyledItemDelegate):
+    """Lekki delegat rysujący wiersze bezpośrednio, bez tworzenia QWidgetów"""
+    def paint(self, painter: QPainter, option, index):
+        painter.save()
         
-        self.name_label = QLabel(stop_name)
-        self.name_label.setStyleSheet("font-weight: bold; font-size: 13px; color: #ffffff;")
+        # Draw the selected background
+        if option.state & QStyle.State_Selected:
+            painter.fillRect(option.rect, QColor("#3a3a3c"))
+            
+        # Get data from the model
+        stop_name = index.data(Qt.DisplayRole)
+        stop_id = index.data(Qt.UserRole)
         
-        self.id_label = QLabel(f"ID: {stop_id}")
-        self.id_label.setStyleSheet("color: #8a8a93; font-size: 11px;")
+        rect = option.rect
+        
+        # 1. Draw Stop Name (Bold, White)
+        font = painter.font()
+        font.setBold(True)
+        font.setPixelSize(13)
+        painter.setFont(font)
+        painter.setPen(QColor("#ffffff"))
+        painter.drawText(rect.adjusted(10, 8, -10, -8), Qt.AlignLeft | Qt.AlignTop, stop_name)
+        
+        # 2. Draw Stop ID (Gray, Smaller)
+        font.setBold(False)
+        font.setPixelSize(11)
+        painter.setFont(font)
+        painter.setPen(QColor("#8a8a93"))
+        painter.drawText(rect.adjusted(10, 26, -10, -8), Qt.AlignLeft | Qt.AlignTop, f"ID: {stop_id}")
+        
+        # 3. Draw Bottom Border (replaces CSS border-bottom)
+        painter.setPen(QColor("#3a3a3c"))
+        painter.drawLine(rect.bottomLeft(), rect.bottomRight())
+        
+        painter.restore()
 
-        layout.addWidget(self.name_label)
-        layout.addWidget(self.id_label)
+    def sizeHint(self, option, index) -> QSize:
+        # Return a fixed size for your rows (adjust height as needed)
+        return QSize(option.rect.width(), 50)
 
 
 class StatCard(QFrame):
@@ -102,8 +131,7 @@ class TransitGUI(QMainWindow):
             return
             
         stop_id = current.data(Qt.UserRole)
-        widget = self.stop_list.itemWidget(current)
-        stop_name = widget.name_label.text() if widget else ""
+        stop_name = current.data(Qt.DisplayRole) # Grab name directly from the item
         
         self.presenter.on_stop_selected(stop_id, stop_name)
 
@@ -138,9 +166,11 @@ class TransitGUI(QMainWindow):
         self.stop_list = QListWidget()
         self.stop_list.setStyleSheet("""
             QListWidget { background-color: #2c2c2e; border: 1px solid #3a3a3c; border-radius: 8px; }
-            QListWidget::item { border-bottom: 1px solid #3a3a3c; }
-            QListWidget::item:selected { background-color: #3a3a3c; border-radius: 6px; }
         """)
+        
+        # APPLY THE DELEGATE HERE
+        self.stop_delegate = StopListDelegate(self.stop_list)
+        self.stop_list.setItemDelegate(self.stop_delegate)
 
         layout.addWidget(self.search_input)
         layout.addWidget(self.stop_list)
@@ -228,20 +258,22 @@ class TransitGUI(QMainWindow):
     @Slot(list)
     def show_stop_list(self, stops: list[tuple[str, str]]) -> None:
         self.stop_list.blockSignals(True)
+        self.stop_list.setUpdatesEnabled(False)
         self.stop_list.clear()
-        
+
         for stop_id, stop_name in stops:
-            item = QListWidgetItem(self.stop_list)
-            custom_widget = StopListWidgetItem(stop_id, stop_name)
-            item.setSizeHint(custom_widget.sizeHint())
+            item = QListWidgetItem()
+            # Store Name in DisplayRole and ID in UserRole
+            item.setData(Qt.DisplayRole, stop_name)
             item.setData(Qt.UserRole, stop_id)
-            
             self.stop_list.addItem(item)
-            self.stop_list.setItemWidget(item, custom_widget)
+            
+            # NO MORE setItemWidget()!
             
         self.stop_list.blockSignals(False)
+        self.stop_list.setUpdatesEnabled(True)
 
-    @Slot(object)
+    @Slot(StopStats)
     def show_stats(self, stats) -> None:
         # Nagłówek główny
         self.stop_name.setText(stats.stop_name)
