@@ -189,6 +189,8 @@ class TransitGUI(QMainWindow):
 
         self.top_directions_list = QListWidget()
         self.top_directions_list.setStyleSheet(self._list_style())
+        # FIX 1: Blokujemy rozciąganie listy kierunków (wystarczy na ok. 3-4 pozycje)
+        self.top_directions_list.setMaximumHeight(150) 
         layout.addWidget(self.top_directions_list)
 
         next_title = QLabel("Next Departures")
@@ -197,7 +199,11 @@ class TransitGUI(QMainWindow):
 
         self.next_departures_list = QListWidget()
         self.next_departures_list.setStyleSheet(self._list_style())
+        # Opcjonalnie: możesz też ustawić minimalną wysokość dla najbliższych odjazdów, by były większe
+        self.next_departures_list.setMinimumHeight(200) 
         layout.addWidget(self.next_departures_list)
+        
+        # FIX 2: Zastępujemy addSpacing() elastycznym separatorem stretch
         layout.addStretch()
 
         scroll.setWidget(panel)
