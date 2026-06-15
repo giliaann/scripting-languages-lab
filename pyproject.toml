@@ -13,7 +13,7 @@ dependencies = [
     "pyside6>=6.11.1",
     "typer>=0.24.1",
     "mypy",
-    "pytest"
+    "pytest",
 ]
 
 [dependency-groups]
