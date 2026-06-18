@@ -19,5 +19,5 @@ if __name__ == "__main__":
         db_path = Path(__file__).parent.parent / 'data' / 'database'/ Path(sys.argv[1]).with_suffix(".sqlite")
         create_database(db_path)
     except Exception as e:
-        print(f"Wystąpił błąd: \n{e}", file=sys.stderr)
+        print(f"Error occured: \n{e}", file=sys.stderr)
         sys.exit(1)

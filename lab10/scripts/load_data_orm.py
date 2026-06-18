@@ -17,7 +17,7 @@ def load_table_from_zip(
     model_class: Type[Base],
     batch_size: int = 50_000
 ) -> None:
-    #
+    
     if file_name not in zip_file.namelist():
         return
 

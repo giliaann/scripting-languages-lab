@@ -15,9 +15,7 @@ class GTFSDatabaseORM:
         self._engine = create_engine(
             f"sqlite:///{db_path.as_posix()}"
         )
-        with self._engine.connect() as conn:
-            conn.exec_driver_sql("PRAGMA foreign_keys = ON")
-            
+                    
         self._session = Session(self._engine)
 
     def fetch_all_stops(self) -> List[Tuple[str, str]]:
@@ -121,6 +119,3 @@ class GTFSDatabaseORM:
         results = self._session.execute(stmt).all()
         return [(str(row.route_short_name), str(row.trip_headsign), str(row.departure_time)) for row in results]
     
-    def __del__(self):
-        if hasattr(self, '_session'):
-            self._session.close()
